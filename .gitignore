@@ -1,4 +1,6 @@
-dist
+.stack-work/
+volr.cabal
+*~dist
 dist-*
 cabal-dev
 *.o
@@ -15,6 +17,5 @@ cabal.sandbox.config
 *.aux
 *.hp
 *.eventlog
-.stack-work/
 cabal.project.local
 .HTF/
