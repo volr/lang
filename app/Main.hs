@@ -1,6 +1,6 @@
 module Main where
 
-import Parser
+import Volr.Parser
 
 main :: IO ()
 main = case parse "Hello" of

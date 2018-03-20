@@ -1,4 +1,4 @@
-module Parser (parse) where
+module Volr.Parser (Error, modelParser, parse) where
 
 import Control.Applicative
 
@@ -10,16 +10,17 @@ import Text.Megaparsec.Error
 import Data.Char
 import Data.Void
 
-import Ast (Model(Model), Input(Input), As(As), SurfacePhenomena(SurfacePhenomena),
+import Volr.Ast (Model(Model), Input(Input), As(As), SurfacePhenomena(SurfacePhenomena),
             Output(Output))
 
 type Parser a = Parsec String String a
+type Error = ParseError (P.Token String) String
 
-parse :: String -> Either (ParseError (P.Token String) String) Model
-parse = P.parse parseModel ""
+parse :: String -> Either Error Model
+parse = P.parse modelParser ""
 
-parseModel :: Parser Model
-parseModel = do
+modelParser :: Parser Model
+modelParser = do
   let input = Input 0
   let output = Output 0
   let as = As 0
