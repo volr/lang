@@ -1,0 +1,50 @@
+name:                volr
+version:             0.1.0.0
+github:              "githubuser/volr"
+license:             BSD3
+author:              "Jens Egholm Pedersen"
+maintainer:          "jensegholm@protonmail.com"
+copyright:           "2018 Jens Egholm Pedersen"
+
+extra-source-files:
+- README.md
+- ChangeLog.md
+
+# Metadata used when publishing your package
+# synopsis:            A DSL for describing neuroscientific learning systems
+# category:            DSL
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:         Please see the README on Github at <https://github.com/githubuser/volr#readme>
+
+dependencies:
+- base >= 4.7 && < 5
+
+library:
+  source-dirs: src
+  dependencies:
+    - parsec
+
+executables:
+  volr-exe:
+    main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - volr
+
+tests:
+  volr-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - volr
