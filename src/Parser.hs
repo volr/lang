@@ -1,16 +1,21 @@
 module Parser (parse) where
 
-import qualified Text.Parsec as P
-import Text.Parsec (ParseError, parserFail)
-import Text.Parsec.Char
+import Control.Applicative
+
+import qualified Text.Megaparsec as P
+import Text.Megaparsec (ParseError,Parsec)
+import Text.Megaparsec.Char
+import qualified Text.Megaparsec.Char.Lexer as L
+import Text.Megaparsec.Error
 import Data.Char
-import Text.Parsec.Combinator (many1)
-import Text.Parsec.String (Parser)
+import Data.Void
 
 import Ast (Model(Model), Input(Input), As(As), SurfacePhenomena(SurfacePhenomena),
             Output(Output))
 
-parse :: String -> Either ParseError Model
+type Parser a = Parsec String String a
+
+parse :: String -> Either (ParseError (P.Token String) String) Model
 parse = P.parse parseModel ""
 
 parseModel :: Parser Model
@@ -19,4 +24,16 @@ parseModel = do
   let output = Output 0
   let as = As 0
   let surface = SurfacePhenomena [as]
-  return $ Model input [surface] output 
+  return $ Model input [surface] output
+
+parseField :: Parser a -> Parser (String, a)
+parseField p = (,) <$> parseName <* space <* char '=' <* space <*> p
+
+parseInteger :: Parser Int
+parseInteger = (L.lexeme space) L.decimal
+
+parseName :: Parser String
+parseName = some $ printChar
+
+parseNumber :: Parser Float
+parseNumber = (L.lexeme space) L.float
