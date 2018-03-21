@@ -21,10 +21,10 @@ parse = P.parse modelParser ""
 
 modelParser :: Parser Model
 modelParser = do
-  let input = Input 0
-  let output = Output 0
+  let input = Input 0 0
+  let output = Output 0 0
   let as = As 0
-  let surface = SurfacePhenomena [as]
+  let surface = SurfacePhenomena 0 0 [as]
   return $ Model input [surface] output
 
 parseField :: Parser a -> Parser (String, a)

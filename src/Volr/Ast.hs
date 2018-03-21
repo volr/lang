@@ -16,12 +16,40 @@ data Model = Model
   , output :: Output
   } deriving (Eq, Show)
 
-newtype SurfacePhenomena = SurfacePhenomena
-  { strategies :: [As] } deriving (Eq, Show)
-newtype Input = Input
-  { inputFeatures :: Features } deriving (Eq, Show)
-newtype Output = Output
-  { outputFeatures :: Features } deriving (Eq, Show)
+class WithFeatures a where
+  inputFeatures :: a -> Int
+  outputFeatures :: a -> Int
+
+class WithStrategies a where
+  strategies :: a -> [As]
+  -- TODO: pickStrategy :: [As] -> As
+
+data SurfacePhenomena = SurfacePhenomena
+  { inputFeaturesPhenomena :: Int
+  , outputFeaturesPhenomena :: Int
+  , strategiesFromPhenomena :: [As]
+  } deriving (Eq, Show)
+
+instance WithStrategies SurfacePhenomena where
+  strategies = strategiesFromPhenomena
+
+data Input = Input
+  { inputFeaturesFromInput :: Features
+  , outputFeaturesFromInput :: Features
+  } deriving (Eq, Show)
+
+instance WithFeatures Input where
+  inputFeatures = inputFeaturesFromInput
+  outputFeatures = outputFeaturesFromInput
+
+data Output = Output
+  { inputFeaturesFromOutput :: Features
+  , outputFeaturesfromOutput :: Features
+  } deriving (Eq, Show)
+
+instance WithFeatures Output where
+  inputFeatures = inputFeaturesFromOutput
+  outputFeatures = outputFeaturesfromOutput
 
 -- | An algorithmic strategy containing a number of EFs
 newtype As = As

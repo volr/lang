@@ -15,5 +15,11 @@ spec :: Spec
 spec = do
   describe "The volr parser" $ do
 
+    let model = """
+input { features = 4 } feeding as1
+as1 { strategies = [ 100 ] } feeding output
+output { features = 1 }
+    """
+
     it "can parse a simple model" $ do
-      (parse "") `shouldBe` (Right (Model (Input 0) [SurfacePhenomena [As 0]] (Output 0)) :: Either Error Model)
+      parse model `shouldBe` (Right (Model (Input 4) [SurfacePhenomena [As 0]] (Output 0)) :: Either Error Model)
