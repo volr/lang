@@ -19,28 +19,37 @@ spec :: Spec
 spec = do
   describe "The volr parser" $ do
 
-    let model = "stimuli s [1] \
+    let model = "stimulus s [1] \
     \  file: x.txt\
+    \ \
     \strategy 1 from s\
-    \functions: 10\
-    \response [2]\
-    \  file: y.txt"
+    \  functions: 10\
+    \ \
+    \response from 1\
+    \  file: y.txt\
+    \  criterion: random"
 
     it "can parse a simple model" $ do
-      parse model `shouldBe` (Right (Model [Strategy "1" [] 10] (Response [] "y.txt" Random)) :: Either Error Model)
+      let stimulus = Stimulatable (Stimulus "s" 1 "x.txt")
+      let strategy = Stimulatable (Strategy "1" [stimulus] 10)
+      parse model `shouldBe` (Right (Model (Response [strategy] "y.txt" Random)))
 
-    -- it "can parse a simple response" $ do
-      -- P.parse parseResponse "" "response [2]\n  file: x.y\n  criterion: random" `shouldBe` (Right (Response 2 "x.y" Random))
+    it "can parse a simple response" $ do
+      let stimulus = Stimulus "2" 3 "x.y"
+      let (r, s) = runState (P.runParserT parseResponse "" "response from 2\n  file: x.y\n  criterion: random") $ Map.fromList [("2", Stimulatable stimulus)]
+      let expected = Response [Stimulatable stimulus] "x.y" Random
+      r `shouldBe` (Right expected)
+      s `shouldBe` (Map.fromList [("2", Stimulatable stimulus)])
 
-    it "can parse a simple stimuli" $ do
-      let (r, s) = runState (P.runParserT parseStimuli "" "stimuli 1 [2]\n  file: x.y") Map.empty
-      let expected = Stimuli "1" 2 "x.y"
+    it "can parse a simple stimulus" $ do
+      let (r, s) = runState (P.runParserT parseStimulus "" "stimulus 1 [2]\n  file: x.y") Map.empty
+      let expected = Stimulus "1" 2 "x.y"
       r `shouldBe` (Right expected)
       s `shouldBe` (Map.fromList [("1", Stimulatable expected)])
 
     it "can parse a simple strategy" $ do
-      let stimuli = Stimuli "1" 2 "x.y"
-      let expected = Strategy "2" [Stimulatable stimuli] 10
-      let (r, s) = runState (P.runParserT parseStrategy "" "strategy 2 from 1\n  functions: 10") (Map.fromList [("1", Stimulatable stimuli)])
+      let stimulus = Stimulus "1" 2 "x.y"
+      let expected = Strategy "2" [Stimulatable stimulus] 10
+      let (r, s) = runState (P.runParserT parseStrategy "" "strategy 2 from 1\n  functions: 10") (Map.fromList [("1", Stimulatable stimulus)])
       r `shouldBe` (Right expected)
-      s `shouldBe` (Map.fromList [("1", Stimulatable stimuli), ("2", Stimulatable expected)])
+      s `shouldBe` (Map.fromList [("1", Stimulatable stimulus), ("2", Stimulatable expected)])
