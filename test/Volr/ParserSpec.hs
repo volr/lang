@@ -27,17 +27,17 @@ spec = do
     \ \
     \response from 1\
     \  file: y.txt\
-    \  criterion: random"
+    \  learning_rate: 0.5"
 
     it "can parse a simple model" $ do
       let stimulus = Stimulatable (Stimulus "s" 1 "x.txt")
       let strategy = Stimulatable (Strategy "1" [stimulus] 10)
-      parse model `shouldBe` (Right (Model (Response [strategy] "y.txt" Random)))
+      parse model `shouldBe` (Right (Model (Response [strategy] "y.txt" 0.5)))
 
     it "can parse a simple response" $ do
       let stimulus = Stimulus "2" 3 "x.y"
-      let (r, s) = runState (P.runParserT parseResponse "" "response from 2\n  file: x.y\n  criterion: random") $ Map.fromList [("2", Stimulatable stimulus)]
-      let expected = Response [Stimulatable stimulus] "x.y" Random
+      let (r, s) = runState (P.runParserT parseResponse "" "response from 2\n  file: x.y\n  learning_rate: 0.5") $ Map.fromList [("2", Stimulatable stimulus)]
+      let expected = Response [Stimulatable stimulus] "x.y" 0.5
       r `shouldBe` (Right expected)
       s `shouldBe` (Map.fromList [("2", Stimulatable stimulus)])
 

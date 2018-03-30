@@ -1,0 +1,3 @@
+[submodule "futhark-backend"]
+	path = futhark-backend
+	url = git@github.com:volr/futhark-backend.git

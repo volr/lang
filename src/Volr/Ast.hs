@@ -3,7 +3,6 @@
 module Volr.Ast
   ( Model(Model)
   , Strategy(Strategy)
-  , SelectionCriterion(Accuracy, Random)
   , Stimulus(Stimulus)
   , Response(Response)
   , Features
@@ -27,11 +26,6 @@ data Strategy
 instance WithStimulus Strategy where
   features (Strategy _ s _) = foldl (+) 0 (map (\(Stimulatable a) -> features a) s)
 
-data SelectionCriterion
-  = Accuracy
-  | Random
-  deriving (Eq, Show)
-
 data Stimulus
   = Stimulus String Features String
   deriving (Eq, Show)
@@ -40,7 +34,7 @@ instance WithStimulus Stimulus where
   features (Stimulus _ f _) = f
 
 data Response
-  = Response [Stimulatable] String SelectionCriterion
+  = Response [Stimulatable] String Float
   deriving (Eq, Show)
 
 data Stimulatable = forall a. (Show a, Eq a, Typeable a, WithStimulus a) => Stimulatable a

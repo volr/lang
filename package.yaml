@@ -28,9 +28,12 @@ library:
     - megaparsec
     - containers
     - mtl
+    - process
+    - base
+    - directory
 
 executables:
-  volr-exe:
+  volr:
     main:                Main.hs
     source-dirs:         app
     ghc-options:
@@ -39,6 +42,7 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - volr
+    - optparse-applicative
 
 tests:
   volr-test:

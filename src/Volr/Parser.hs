@@ -27,16 +27,15 @@ parse s =
 
 modelParser :: Parser Model
 modelParser = do
-  stimuli <- (space *> many (P.try parseStimulus))
-  strategies <- (space *> many (P.try parseStrategy))
+  stimuli <- (space *> P.try (many ( parseStimulus)))
+  strategies <- (space *> P.try (many (parseStrategy)))
   Model <$> (space *> parseResponse)
 
 parseResponse :: Parser Response
-parseResponse = Response <$> (string "response" *> space1 *> parseStimulatableList) <*> (space1 *> parseFile) <*> (space *> parseSelection)
-
-parseSelection :: Parser SelectionCriterion
-parseSelection =
-   string "criterion:" *> space *> ((string "accuracy" *> pure Accuracy) <|> (string "random" *> pure Random))
+parseResponse = Response
+  <$> (string "response" *> space1 *> parseStimulatableList)
+  <*> (space1 *> parseFile)
+  <*> (space1 *> parseNamedField "learning_rate" parseNumber)
 
 parseStimulus :: Parser Stimulus
 parseStimulus = do
