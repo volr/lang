@@ -37,3 +37,10 @@ spec = do
       let expected = Stimuli "1" 2 "x.y"
       r `shouldBe` (Right expected)
       s `shouldBe` (Map.fromList [("1", Stimulatable expected)])
+
+    it "can parse a simple strategy" $ do
+      let stimuli = Stimuli "1" 2 "x.y"
+      let expected = Strategy "2" [Stimulatable stimuli] 10
+      let (r, s) = runState (P.runParserT parseStrategy "" "strategy 2 from 1\n  functions: 10") (Map.fromList [("1", Stimulatable stimuli)])
+      r `shouldBe` (Right expected)
+      s `shouldBe` (Map.fromList [("1", Stimulatable stimuli), ("2", Stimulatable expected)])

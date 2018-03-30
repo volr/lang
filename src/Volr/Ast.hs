@@ -8,6 +8,7 @@ module Volr.Ast
   , Response(Response)
   , Features
   , Stimulatable(Stimulatable)
+  , WithStimuli(features)
   )
  where
 
