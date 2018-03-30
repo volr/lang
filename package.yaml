@@ -26,6 +26,8 @@ library:
   source-dirs: src
   dependencies:
     - megaparsec
+    - containers
+    - mtl
 
 executables:
   volr-exe:
@@ -49,5 +51,7 @@ tests:
     dependencies:
     - volr
     - megaparsec
+    - containers
+    - mtl
     - hspec
     - QuickCheck
