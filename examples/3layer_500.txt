@@ -1,0 +1,12 @@
+stimulus input [2]
+  file: examples/maze_x500.txt
+
+strategy b1 from input
+  functions: 10
+
+strategy b2 from b1
+  functions: 2
+
+response from b2
+  file: examples/maze_y500.txt
+  learning_rate: 0.5

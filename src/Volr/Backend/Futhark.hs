@@ -80,10 +80,9 @@ evaluateFuthark (FutharkEvaluation code xFile yFile) = do
   let fileName = "bin/futhark-model"
   createDirectoryIfMissing False "bin"
   writeFile (fileName ++ ".fut") code
-  (_, _, _, compileProcess) <- createProcess (proc "futhark-opencl" [fileName ++ ".fut", "-I", futharkBackendDir])
+  (_, _, _, compileProcess) <- createProcess (proc "futhark-opencl" [fileName ++ ".fut", "-I", futharkBackendDir]) {std_err = CreatePipe }
   waitForProcess compileProcess
   (_, Just fileOut, _, _) <- createProcess (proc "cat" [xFile, yFile]) { std_out = CreatePipe }
   (_, Just runOut, _, _) <- createProcess (proc fileName []) { std_in = UseHandle fileOut, std_out = CreatePipe}
   result <- hGetContents runOut
-  putStrLn result
-  return ""
+  return result

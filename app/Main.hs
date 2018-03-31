@@ -67,7 +67,7 @@ runBackend model configuration = do
       result <- resultIO
       case output of
         FileOutput file -> writeFile file result
-        StdOutput -> putStrLn result
+        StdOutput -> putStrLn $ "Accuracy: " ++ result
 
 main :: IO ()
 main = do
