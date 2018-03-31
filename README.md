@@ -6,7 +6,7 @@ The language is capable of modeling basic neurological properties, and evaluate 
 ## Example
 
     stimulus input [2]
-      file: examples/maze_x100.txt
+      file: examples/maze_x500.txt
 
     strategy b1 from input
       functions: 30
@@ -18,7 +18,7 @@ The language is capable of modeling basic neurological properties, and evaluate 
       functions: 2
 
     response from b3
-      file: examples/maze_y100.txt
+      file: examples/maze_y500.txt
       learning_rate: 0.5
 
 ## Contact
