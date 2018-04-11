@@ -30,12 +30,12 @@ data FutharkEvaluation = FutharkEvaluation
   , yFile :: String
   }
 
-discoverFeatureList :: [Int] -> [Stimulatable] -> Either String ([Int], String)
-discoverFeatureList list [Stimulatable x]=
+discoverFeatureList :: [Int] -> [Stimulatable] -> Either String [Int]
+discoverFeatureList list [Stimulatable x] =
     case (cast x :: Maybe Function) of
       Just (Function _ xs size) -> discoverFeatureList (size : list) xs
       _ -> case (cast x :: Maybe Stimulus) of
-        Just (Stimulus _ features xFile) -> Right ((features : list), xFile)
+        Just (Stimulus _ features) -> Right (features : list)
         _ -> Left ("Unknown entity with stimulus " ++ (show x))
 discoverFeatureList list _ = Left "Responses with anything but one input not yet supported"
 
@@ -47,22 +47,23 @@ featureListToFuthark [s1, s2, out]
 featureListToFuthark s = Left $ "Unsupported number of layers " ++ (show (length s))
 
 generateFuthark :: Model -> Either String FutharkEvaluation
-generateFuthark (Model (Response xs yFile learning_rate)) =
+generateFuthark (Model (Response xs) (Target Futhark xFile yFile)) =
   let
     modulePrefix n = "module N = Network" ++ n ++ " (f64) {\n"
     modulePostfix = "\n}\n"
   in case discoverFeatureList [] xs of
     Left error -> Left error
-    Right (list, xFile) -> fmap (\code -> FutharkEvaluation
+    Right list -> fmap (\code -> FutharkEvaluation
       { code
           =  futharkPreample
           ++ (modulePrefix (show (length list)))
           ++ code
-          ++ "\nlet learning_rate = " ++ (show learning_rate)
+          ++ "\nlet learning_rate = 0.5" -- TODO: ++ (show learning_rate)
           ++ modulePostfix
           ++ futharkPostample
       , xFile = xFile
       , yFile = yFile }) $ featureListToFuthark list
+generateFuthark (Model r b) = Left $ "Unsupported backend " ++ show b
 
 evaluateFuthark :: FutharkEvaluation -> IO String
 evaluateFuthark (FutharkEvaluation code xFile yFile) = do

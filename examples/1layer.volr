@@ -3,7 +3,8 @@ stimulus s [2]
 function f from s
   neurons: 10
 
-response from f [1]
+response from f
 
-targets:
-  futhark:
+target myelin
+  input: x
+  output: y

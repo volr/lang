@@ -1,4 +1,4 @@
-module Volr.Parser (Error, modelParser, parse, parseResponse, parseStimulus, parseFunction) where
+module Volr.Parser (Error, modelParser, parse, parseResponse, parseStimulus, parseFunction, parseTarget) where
 
 import Control.Applicative
 import Control.Monad.State.Lazy
@@ -29,18 +29,16 @@ modelParser :: Parser Model
 modelParser = do
   stimuli <- (space *> P.try (many ( parseStimulus)))
   functions <- (space *> P.try (many (parseFunction)))
-  Model <$> (space *> parseResponse)
+  Model <$> (space *> parseResponse) <*> (space *> parseTarget)
 
 parseResponse :: Parser Response
 parseResponse = Response
   <$> (string "response" *> space1 *> parseStimulatableList)
-  <*> (space1 *> parseFile)
-  <*> (space1 *> parseNamedField "learning_rate" parseNumber)
 
 parseStimulus :: Parser Stimulus
 parseStimulus = do
-  stimulus <- Stimulus <$> (string "stimulus" *> space1 *> parseName) <*> (space1 *> parseFeatures) <*> (space1 *> parseFile)
-  let (Stimulus name _ _) = stimulus
+  stimulus <- Stimulus <$> (string "stimulus" *> space1 *> parseName) <*> (space1 *> parseFeatures)
+  let (Stimulus name _) = stimulus
   modify (\m -> Map.insert name (Stimulatable stimulus) m)
   return stimulus
 
@@ -82,6 +80,12 @@ parseStimulatable = do
   case Map.lookup name state of
     Just s -> gets (\_ -> s)
     Nothing -> customFailure $ "No stimulus or function of name '" ++ name ++ "' found"
+
+parseTarget :: Parser Target
+parseTarget = Target
+  <$> ((string "target") *> space1 *> (P.try ((string' "futhark") *> (pure Futhark)) <|> ((string' "myelin") *> (pure Myelin))))
+  <*> (space *> parseNamedField "input" parseName)
+  <*> (space *> parseNamedField "output" parseName)
 
 parseNumber :: Parser Float
 parseNumber = (L.lexeme space) L.float

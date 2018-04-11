@@ -5,10 +5,6 @@ import Volr.Ast
 import Volr.Backend.Futhark
 import Volr.Backend.Myelin
 
-data Backend
-  = Futhark
-  | Myelin
-
 run :: Backend -> Model -> Either String (IO String)
 run Futhark model = runFuthark model
 run Myelin model = runMyelin model
