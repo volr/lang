@@ -26,15 +26,13 @@ parseMyelin (Model (Response xs fileName learningRate)) = do
     s <- get
     pure $ T.unpack $ TL.toStrict $ renderNetwork s
 
--- responseToProjection :: Response -> ProjectionType -> SNN ()
--- responseToProjection (Response xs name learningRate) p =
 projectRecursively :: Node -> ProjectionType -> Stimulatable -> SNN ()
 projectRecursively to t (Stimulatable s) = case (cast s :: Maybe Stimulus) of
   Just (Stimulus name features fileName) -> do
     from <- fileInput fileName
     projection AllToAll from to
-  _ -> case (cast s :: Maybe Strategy) of
-    Just (Strategy name xs features) -> do
+  _ -> case (cast s :: Maybe Function) of
+    Just (Function name xs features) -> do
       from <- population (toInteger features) if_current_alpha_default name
       projection AllToAll from to
       sequence_ $ map (\ss -> projectRecursively from t ss) xs

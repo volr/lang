@@ -2,7 +2,7 @@
 
 module Volr.Ast
   ( Model(Model)
-  , Strategy(Strategy)
+  , Function(Function)
   , Stimulus(Stimulus)
   , Response(Response)
   , Features
@@ -19,12 +19,12 @@ data Model = Model Response deriving (Eq, Show)
 class WithStimulus a where
   features :: a -> Features
 
-data Strategy
-  = Strategy String [Stimulatable] Int
+data Function
+  = Function String [Stimulatable] Int
   deriving (Eq, Show)
 
-instance WithStimulus Strategy where
-  features (Strategy _ s _) = foldl (+) 0 (map (\(Stimulatable a) -> features a) s)
+instance WithStimulus Function where
+  features (Function _ s _) = foldl (+) 0 (map (\(Stimulatable a) -> features a) s)
 
 data Stimulus
   = Stimulus String Features String

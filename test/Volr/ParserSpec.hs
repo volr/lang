@@ -22,8 +22,8 @@ spec = do
     let model = "stimulus s [1] \
     \  file: x.txt\
     \ \
-    \strategy 1 from s\
-    \  functions: 10\
+    \function 1 from s\
+    \  neurons: 10\
     \ \
     \response from 1\
     \  file: y.txt\
@@ -31,8 +31,8 @@ spec = do
 
     it "can parse a simple model" $ do
       let stimulus = Stimulatable (Stimulus "s" 1 "x.txt")
-      let strategy = Stimulatable (Strategy "1" [stimulus] 10)
-      parse model `shouldBe` (Right (Model (Response [strategy] "y.txt" 0.5)))
+      let function = Stimulatable (Function "1" [stimulus] 10)
+      parse model `shouldBe` (Right (Model (Response [function] "y.txt" 0.5)))
 
     it "can parse a simple response" $ do
       let stimulus = Stimulus "2" 3 "x.y"
@@ -47,9 +47,9 @@ spec = do
       r `shouldBe` (Right expected)
       s `shouldBe` (Map.fromList [("1", Stimulatable expected)])
 
-    it "can parse a simple strategy" $ do
+    it "can parse a simple function" $ do
       let stimulus = Stimulus "1" 2 "x.y"
-      let expected = Strategy "2" [Stimulatable stimulus] 10
-      let (r, s) = runState (P.runParserT parseStrategy "" "strategy 2 from 1\n  functions: 10") (Map.fromList [("1", Stimulatable stimulus)])
+      let expected = Function "2" [Stimulatable stimulus] 10
+      let (r, s) = runState (P.runParserT parseFunction "" "function 2 from 1\n  neurons: 10") (Map.fromList [("1", Stimulatable stimulus)])
       r `shouldBe` (Right expected)
       s `shouldBe` (Map.fromList [("1", Stimulatable stimulus), ("2", Stimulatable expected)])

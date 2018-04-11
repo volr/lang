@@ -1,4 +1,4 @@
-module Volr.Parser (Error, modelParser, parse, parseResponse, parseStimulus, parseStrategy) where
+module Volr.Parser (Error, modelParser, parse, parseResponse, parseStimulus, parseFunction) where
 
 import Control.Applicative
 import Control.Monad.State.Lazy
@@ -28,7 +28,7 @@ parse s =
 modelParser :: Parser Model
 modelParser = do
   stimuli <- (space *> P.try (many ( parseStimulus)))
-  strategies <- (space *> P.try (many (parseStrategy)))
+  functions <- (space *> P.try (many (parseFunction)))
   Model <$> (space *> parseResponse)
 
 parseResponse :: Parser Response
@@ -44,15 +44,15 @@ parseStimulus = do
   modify (\m -> Map.insert name (Stimulatable stimulus) m)
   return stimulus
 
-parseStrategy :: Parser Strategy
-parseStrategy = do
-  strategy <- Strategy <$> ((string "strategy") *> space1 *>
+parseFunction :: Parser Function
+parseFunction = do
+  function <- Function <$> ((string "function") *> space1 *>
                parseName) <* space1 <*>
                parseStimulatableList <* space1 <*>
-               parseNamedField "functions" parseInteger
-  let (Strategy name _ _) = strategy
-  modify (\m -> Map.insert name (Stimulatable strategy) m)
-  return strategy
+               parseNamedField "neurons" parseInteger
+  let (Function name _ _) = function
+  modify (\m -> Map.insert name (Stimulatable function) m)
+  return function
 
 parseFeatures :: Parser Features
 parseFeatures = char '[' *> space *> parseInteger <* space <* char ']'
@@ -81,7 +81,7 @@ parseStimulatable = do
   state <- get
   case Map.lookup name state of
     Just s -> gets (\_ -> s)
-    Nothing -> customFailure $ "No stimulus or strategy of name '" ++ name ++ "' found"
+    Nothing -> customFailure $ "No stimulus or function of name '" ++ name ++ "' found"
 
 parseNumber :: Parser Float
 parseNumber = (L.lexeme space) L.float

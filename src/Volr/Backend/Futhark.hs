@@ -32,8 +32,8 @@ data FutharkEvaluation = FutharkEvaluation
 
 discoverFeatureList :: [Int] -> [Stimulatable] -> Either String ([Int], String)
 discoverFeatureList list [Stimulatable x]=
-    case (cast x :: Maybe Strategy) of
-      Just (Strategy _ xs size) -> discoverFeatureList (size : list) xs
+    case (cast x :: Maybe Function) of
+      Just (Function _ xs size) -> discoverFeatureList (size : list) xs
       _ -> case (cast x :: Maybe Stimulus) of
         Just (Stimulus _ features xFile) -> Right ((features : list), xFile)
         _ -> Left ("Unknown entity with stimulus " ++ (show x))
