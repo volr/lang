@@ -31,6 +31,8 @@ library:
     - process
     - base
     - directory
+    - myelin
+    - text
 
 executables:
   volr:

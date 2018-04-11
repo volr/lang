@@ -13,9 +13,6 @@ futharkBackendDir = "futhark-backend/src/"
 
 runFuthark :: Model -> Either String (IO String)
 runFuthark model = (fmap evaluateFuthark) $ generateFuthark model
---
--- responseToFuthark :: Response -> String
--- responseToFuthark response
 
 futharkPreample :: String
 futharkPreample
@@ -26,14 +23,6 @@ futharkPostample :: String
 futharkPostample
   = "module P = Predict (N)\n\
    \let main [n] [m] (x: [n][m]N.t) (y: [n]i32) : N.t = P.training_test x y"
-
--- module N = Network4 (f32) {
---   let size1 = 2
---   let size2 = 30
---   let size3 = 10
---   let output = 2
---   let learning_rate = 0.5
--- }
 --
 data FutharkEvaluation = FutharkEvaluation
   { code :: String

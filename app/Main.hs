@@ -36,7 +36,8 @@ parseInput = parseFileInput
   <|> pure StdInput
 
 parseBackend :: Parser Backend
-parseBackend = pure Futhark
+parseBackend = flag' Futhark ( long "futhark" <> help "execute on futhark")
+  <|> flag' Myelin ( long "myelin" <> help "execute on futhark")
 
 parseFileOutput :: Parser Output
 parseFileOutput = FileOutput <$> strOption
@@ -67,7 +68,7 @@ runBackend model configuration = do
       result <- resultIO
       case output of
         FileOutput file -> writeFile file result
-        StdOutput -> putStrLn $ "Accuracy: " ++ result
+        StdOutput -> putStrLn result
 
 main :: IO ()
 main = do
