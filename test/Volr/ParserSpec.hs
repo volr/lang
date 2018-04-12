@@ -9,6 +9,7 @@ import qualified Text.Megaparsec as P
 import Test.Hspec
 import qualified Test.QuickCheck
 
+import Myelin.SNN
 import Volr.Parser
 import Volr.Ast
 
@@ -31,14 +32,14 @@ spec = do
     \  output: y"
 
     it "can parse a target" $ do
-      let expected = Target Myelin "x" "y"
-      let (r, s) = runState (P.runParserT parseTarget "" "target Myelin\n  input: x\n  output: y") Map.empty
+      let expected = Target (Myelin (Nest 0 0)) (Array [1.0, 2.0]) "y"
+      let (r, s) = runState (P.runParserT parseTarget "" "target nest\n  input: [1.0, 2.0]\n  output: y") Map.empty
       r `shouldBe` (Right expected)
 
     it "can parse a simple model" $ do
       let stimulus = Stimulatable (Stimulus "s" 1)
       let function = Stimulatable (Function "1" [stimulus] 10)
-      parse model `shouldBe` (Right (Model (Response [function])(Target Futhark "x" "y")))
+      parse model `shouldBe` (Right (Model (Response [function])(Target Futhark (File "x") "y")))
 
     it "can parse a simple response" $ do
       let stimulus = Stimulus "2" 3

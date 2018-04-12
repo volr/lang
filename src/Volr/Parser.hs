@@ -12,6 +12,7 @@ import Data.Char
 import qualified Data.Map as Map
 import Data.Void
 
+import Myelin.SNN (ExecutionTarget(Spikey, Nest))
 import Volr.Ast
 
 type Error = ParseError (P.Token String) String
@@ -83,9 +84,16 @@ parseStimulatable = do
 
 parseTarget :: Parser Target
 parseTarget = Target
-  <$> ((string "target") *> space1 *> (P.try ((string' "futhark") *> (pure Futhark)) <|> ((string' "myelin") *> (pure Myelin))))
-  <*> (space *> parseNamedField "input" parseName)
+  <$> ((string "target") *> space1 *> ((P.try (string' "futhark") *> (pure Futhark)) <|> (string' "nest") *> (pure (Myelin (Nest 0 0)))))
+  <*> (space *> parseDataSource)
   <*> (space *> parseNamedField "output" parseName)
+-- (P.try (string' "spikey") *> (pure (Myelin (Spikey 0)))) <|>
+
+parseDataSource :: Parser DataSource
+parseDataSource = (P.try (Array <$> (parseNamedField "input" (parseList parseNumber))) <|> (File <$> (parseNamedField "input" parseName)))
 
 parseNumber :: Parser Float
 parseNumber = (L.lexeme space) L.float
+
+parseList :: Parser a -> Parser [a]
+parseList inner = string "[" *> space *> ((:) <$> inner <*> (P.many (P.try (space *> string "," *> space *> inner)))) <* space <* string "]"

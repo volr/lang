@@ -5,6 +5,6 @@ function f from s
 
 response from f
 
-target myelin
-  input: x
+target nest
+  input: [1.0, 2.0, 3.0]
   output: y

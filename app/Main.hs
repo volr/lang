@@ -11,7 +11,6 @@ import Volr.Backend
 
 data Configuration = Configuration
   { input :: Input
-  , backend :: Backend
   , output :: Output
   }
 
@@ -35,10 +34,6 @@ parseInput :: Parser Input
 parseInput = parseFileInput
   <|> pure StdInput
 
-parseBackend :: Parser Backend
-parseBackend = flag' Futhark ( long "futhark" <> help "execute on futhark")
-  <|> flag' Myelin ( long "myelin" <> help "execute on futhark")
-
 parseFileOutput :: Parser Output
 parseFileOutput = FileOutput <$> strOption
   (  long "output"
@@ -52,7 +47,6 @@ parseOutput = parseFileOutput <|> pure StdOutput
 parseConfig :: Parser Configuration
 parseConfig = Configuration
   <$> parseInput
-  <*> parseBackend
   <*> parseOutput
 
 readInput :: Input -> IO String
@@ -61,8 +55,8 @@ readInput StdInput = getContents
 
 runBackend :: Model -> Configuration -> IO ()
 runBackend model configuration = do
-  let (Configuration input backend output) = configuration
-  case run backend model of
+  let (Configuration input output) = configuration
+  case run model of
     Left error -> hPutStrLn stderr error
     Right resultIO -> do
       result <- resultIO
@@ -73,7 +67,7 @@ runBackend model configuration = do
 main :: IO ()
 main = do
     configuration <- execParser configuration
-    let (Configuration input _ _) = configuration
+    let (Configuration input _) = configuration
     content <- readInput input
     case parse content of
       Left error -> hPutStrLn stderr $ show error

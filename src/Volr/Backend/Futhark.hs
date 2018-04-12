@@ -47,7 +47,7 @@ featureListToFuthark [s1, s2, out]
 featureListToFuthark s = Left $ "Unsupported number of layers " ++ (show (length s))
 
 generateFuthark :: Model -> Either String FutharkEvaluation
-generateFuthark (Model (Response xs) (Target Futhark xFile yFile)) =
+generateFuthark (Model (Response xs) (Target Futhark (File xFile) yFile)) =
   let
     modulePrefix n = "module N = Network" ++ n ++ " (f64) {\n"
     modulePostfix = "\n}\n"

@@ -2,6 +2,7 @@
 
 module Volr.Ast
   ( Backend(Futhark, Myelin)
+  , DataSource(File, Array)
   , Model(Model)
   , Function(Function)
   , Stimulus(Stimulus)
@@ -14,10 +15,20 @@ module Volr.Ast
  where
 
 import Data.Typeable
+import Myelin.SNN (ExecutionTarget)
 
 data Backend
   = Futhark
-  | Myelin
+  | Myelin ExecutionTarget
+  deriving (Eq, Show)
+
+data Target
+  = Target Backend DataSource String
+  deriving (Eq, Show)
+
+data DataSource
+  = File String
+  | Array [Float]
   deriving (Eq, Show)
 
   -- | A model of the learning process
@@ -49,10 +60,6 @@ instance Show Stimulatable where
   show (Stimulatable s) = show s
 instance Eq Stimulatable where
   Stimulatable a == Stimulatable b = maybe False (== b) (cast a)
-
-data Target
-  = Target Backend String String
-  deriving (Eq, Show)
 
 -- | A number of boolean features to express in the model
 type Features = Int
