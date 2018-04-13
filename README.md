@@ -1,4 +1,5 @@
 # Volr language
+[![Build Status](https://travis-ci.org/volr/lang.svg?branch=master)](https://travis-ci.org/volr/lang)
 Volr is a domain specific language (DSL)
 
 The language is capable of modeling basic neurological properties, and evaluate them on the neuromorphic platform.
