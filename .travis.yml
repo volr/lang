@@ -3,7 +3,15 @@
 sudo: false
 language: c
 
+# Handle git submodules yourself
+git:
+    submodules: false
+
 before_install:
+# Fix submodules to use public URL. Thanks to
+#  https://stackoverflow.com/questions/15674064/how-to-fix-a-permission-denied-publickey-error-for-a-git-submodule-update-in-t
+- sed -i 's/git@github.com:/https:\/\/github.com\//' .gitmodules
+- git submodule update --init --recursive
 # Download and unpack the stack executable
 - mkdir -p ~/.local/bin
 - export PATH=$HOME/.local/bin:$PATH
