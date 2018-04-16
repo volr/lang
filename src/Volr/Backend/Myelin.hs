@@ -29,7 +29,7 @@ parseMyelin (Model (Response xs) (Target _ source outputFile)) = do
     sequence_ $ map (\c -> projectRecursively source output c) xs
 
 projectRecursively :: DataSource -> Node -> Connection -> SNN () Identity
-projectRecursively source to (Connection s effect weight) = case (cast s :: Maybe Stimulus) of
+projectRecursively source to (Connection (Stimulatable s) effect weight) = case (cast s :: Maybe Stimulus) of
   Just (Stimulus name features) -> do
     from <- case source of
       Array xs -> spikeSourceArray xs
