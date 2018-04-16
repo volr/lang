@@ -53,29 +53,13 @@ parseFunction = do
   modify (\m -> Map.insert name (Stimulatable function) m)
   return function
 
-parseFeatures :: Parser Features
-parseFeatures = char '[' *> space *> parseInteger <* space <* char ']'
-
-parseFile :: Parser String
-parseFile = parseNamedField "file" parseName
-
-parseNamedField :: String -> Parser a -> Parser a
-parseNamedField n p = string n <* space <* char ':' <* space *> p
-
-parseField :: Parser a -> Parser (String, a)
-parseField p = (,) <$> parseName <* space <* char ':' <* space <*> p
-
-parseInteger :: Parser Int
-parseInteger = (L.lexeme space) L.decimal
-
-parseName :: Parser String
-parseName = some (alphaNumChar <|> punctuationChar)
-
 parseConnectionList :: Parser [Connection]
 parseConnectionList = (:) <$> (string "from" *> space *> parseConnection) <*> many (P.try (space *> char ',' *> space *> parseConnection))
 
 parseConnection :: Parser Connection
-parseConnection = (,) <$> parseStimulatable <*> (space *> ((P.try ((string' "excitatory") *> (pure Excitatory))) <|> ((string' "inhibitory") *> (pure Inhibitory))))
+parseConnection = Connection <$> parseStimulatable
+  <*> (space *> ((P.try ((string' "excitatory") *> (pure Excitatory))) <|> ((string' "inhibitory") *> (pure Inhibitory))))
+  <*> ((P.try (space *> (parseNamedField "weight" parseNumber))) <|> (pure 1))
 
 parseStimulatable :: Parser Stimulatable
 parseStimulatable = do
@@ -95,8 +79,28 @@ parseTarget = Target
 parseDataSource :: Parser DataSource
 parseDataSource = (P.try (Array <$> (parseNamedField "input" (parseList parseNumber))) <|> (File <$> (parseNamedField "input" parseName)))
 
+--
+
+parseFeatures :: Parser Features
+parseFeatures = char '[' *> space *> parseInteger <* space <* char ']'
+
+parseFile :: Parser String
+parseFile = parseNamedField "file" parseName
+
+parseNamedField :: String -> Parser a -> Parser a
+parseNamedField n p = string n <* space <* char ':' <* space *> p
+
+parseField :: Parser a -> Parser (String, a)
+parseField p = (,) <$> parseName <* space <* char ':' <* space <*> p
+
+parseInteger :: Parser Int
+parseInteger = (L.lexeme space) L.decimal
+
+parseName :: Parser String
+parseName = some (alphaNumChar <|> punctuationChar)
+
 parseNumber :: Parser Float
-parseNumber = (L.lexeme space) L.float
+parseNumber = (P.try L.float) <|> (fromIntegral <$> L.decimal)
 
 parseList :: Parser a -> Parser [a]
 parseList inner = string "[" *> space *> ((:) <$> inner <*> (P.many (P.try (space *> string "," *> space *> inner)))) <* space <* string "]"

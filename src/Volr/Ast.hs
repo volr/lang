@@ -1,8 +1,9 @@
 {-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module Volr.Ast
   ( Backend(Futhark, Myelin)
-  , Connection
+  , Connection(Connection)
   , DataSource(File, Array)
   , Model(Model)
   , Function(Function)
@@ -32,7 +33,14 @@ data DataSource
   | Array [Float]
   deriving (Eq, Show)
 
-type Connection = (Stimulatable, SynapseEffect)
+data Connection = Connection
+  { stimulatable :: Stimulatable
+  , effect :: SynapseEffect
+  , weight :: Float
+  } deriving (Eq, Show)
+
+instance WithStimulus Connection where
+  features (Connection (Stimulatable s) _ _) = features s
 
   -- | A model of the learning process
 data Model = Model Response Target deriving (Eq, Show)
@@ -45,7 +53,7 @@ data Function
   deriving (Eq, Show)
 
 instance WithStimulus Function where
-  features (Function _ s _) = foldl (+) 0 (map (\(Stimulatable a, _) -> features a) s)
+  features (Function _ s _) = foldl (+) 0 (map (\(Connection (Stimulatable a) _ _) -> features a) s)
 
 data Stimulus
   = Stimulus String Features
@@ -61,6 +69,7 @@ data Response
 data Stimulatable = forall a. (Show a, Eq a, Typeable a, WithStimulus a) => Stimulatable a
 instance Show Stimulatable where
   show (Stimulatable s) = show s
+
 instance Eq Stimulatable where
   Stimulatable a == Stimulatable b = maybe False (== b) (cast a)
 
