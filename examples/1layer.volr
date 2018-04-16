@@ -1,10 +1,11 @@
 stimulus s [2]
 
-function f from s
-  neurons: 10
+function f from s excitatory
+  weight: 100
+  neurons: 1
 
-response from f
+response from f excitatory
 
 target nest
-  input: [1.0, 2.0, 3.0]
+  input: [0.1, 0.2, 0.25]
   output: y
