@@ -30,8 +30,8 @@ data FutharkEvaluation = FutharkEvaluation
   , yFile :: String
   }
 
-discoverFeatureList :: [Int] -> [Stimulatable] -> Either String [Int]
-discoverFeatureList list [Stimulatable x] =
+discoverFeatureList :: [Int] -> [Connection] -> Either String [Int]
+discoverFeatureList list [(Stimulatable x, _)] =
     case (cast x :: Maybe Function) of
       Just (Function _ xs size) -> discoverFeatureList (size : list) xs
       _ -> case (cast x :: Maybe Stimulus) of

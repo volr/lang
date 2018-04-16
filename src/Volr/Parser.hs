@@ -12,7 +12,7 @@ import Data.Char
 import qualified Data.Map as Map
 import Data.Void
 
-import Myelin.SNN (ExecutionTarget(Spikey, Nest))
+import Myelin.SNN (ExecutionTarget(Spikey, Nest), SynapseEffect(Excitatory, Inhibitory))
 import Volr.Ast
 
 type Error = ParseError (P.Token String) String
@@ -34,7 +34,7 @@ modelParser = do
 
 parseResponse :: Parser Response
 parseResponse = Response
-  <$> (string "response" *> space1 *> parseStimulatableList)
+  <$> (string "response" *> space1 *> parseConnectionList)
 
 parseStimulus :: Parser Stimulus
 parseStimulus = do
@@ -47,7 +47,7 @@ parseFunction :: Parser Function
 parseFunction = do
   function <- Function <$> ((string "function") *> space1 *>
                parseName) <* space1 <*>
-               parseStimulatableList <* space1 <*>
+               parseConnectionList <* space1 <*>
                parseNamedField "neurons" parseInteger
   let (Function name _ _) = function
   modify (\m -> Map.insert name (Stimulatable function) m)
@@ -71,8 +71,11 @@ parseInteger = (L.lexeme space) L.decimal
 parseName :: Parser String
 parseName = some (alphaNumChar <|> punctuationChar)
 
-parseStimulatableList :: Parser [Stimulatable]
-parseStimulatableList = (:) <$> (string "from" *> space *> parseStimulatable) <*> many (P.try (space *> char ',' *> space *> parseStimulatable))
+parseConnectionList :: Parser [Connection]
+parseConnectionList = (:) <$> (string "from" *> space *> parseConnection) <*> many (P.try (space *> char ',' *> space *> parseConnection))
+
+parseConnection :: Parser Connection
+parseConnection = (,) <$> parseStimulatable <*> (space *> ((P.try ((string' "excitatory") *> (pure Excitatory))) <|> ((string' "inhibitory") *> (pure Inhibitory))))
 
 parseStimulatable :: Parser Stimulatable
 parseStimulatable = do

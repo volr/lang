@@ -22,10 +22,10 @@ spec = do
 
     let model = "stimulus s [1] \
     \ \
-    \function 1 from s\
+    \function 1 from s excitatory\
     \  neurons: 10\
     \ \
-    \response from 1\
+    \response from 1 inhibitory\
     \ \
     \target Futhark\
     \  input: x\
@@ -38,13 +38,13 @@ spec = do
 
     it "can parse a simple model" $ do
       let stimulus = Stimulatable (Stimulus "s" 1)
-      let function = Stimulatable (Function "1" [stimulus] 10)
-      parse model `shouldBe` (Right (Model (Response [function])(Target Futhark (File "x") "y")))
+      let function = Stimulatable (Function "1" [(stimulus, Excitatory)] 10)
+      parse model `shouldBe` (Right (Model (Response [(function, Inhibitory)]) (Target Futhark (File "x") "y")))
 
     it "can parse a simple response" $ do
       let stimulus = Stimulus "2" 3
-      let (r, s) = runState (P.runParserT parseResponse "" "response from 2") $ Map.fromList [("2", Stimulatable stimulus)]
-      let expected = Response [Stimulatable stimulus]
+      let (r, s) = runState (P.runParserT parseResponse "" "response from 2 excitatory") $ Map.fromList [("2", Stimulatable stimulus)]
+      let expected = Response [(Stimulatable stimulus, Excitatory)]
       r `shouldBe` (Right expected)
       s `shouldBe` (Map.fromList [("2", Stimulatable stimulus)])
 
@@ -56,7 +56,7 @@ spec = do
 
     it "can parse a simple function" $ do
       let stimulus = Stimulus "1" 2
-      let expected = Function "2" [Stimulatable stimulus] 10
-      let (r, s) = runState (P.runParserT parseFunction "" "function 2 from 1\n  neurons: 10") (Map.fromList [("1", Stimulatable stimulus)])
+      let expected = Function "2" [(Stimulatable stimulus, Inhibitory)] 10
+      let (r, s) = runState (P.runParserT parseFunction "" "function 2 from 1 inhibitory\n  neurons: 10") (Map.fromList [("1", Stimulatable stimulus)])
       r `shouldBe` (Right expected)
       s `shouldBe` (Map.fromList [("1", Stimulatable stimulus), ("2", Stimulatable expected)])

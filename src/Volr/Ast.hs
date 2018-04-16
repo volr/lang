@@ -2,6 +2,7 @@
 
 module Volr.Ast
   ( Backend(Futhark, Myelin)
+  , Connection
   , DataSource(File, Array)
   , Model(Model)
   , Function(Function)
@@ -15,7 +16,7 @@ module Volr.Ast
  where
 
 import Data.Typeable
-import Myelin.SNN (ExecutionTarget)
+import Myelin.SNN (ExecutionTarget, SynapseEffect)
 
 data Backend
   = Futhark
@@ -31,6 +32,8 @@ data DataSource
   | Array [Float]
   deriving (Eq, Show)
 
+type Connection = (Stimulatable, SynapseEffect)
+
   -- | A model of the learning process
 data Model = Model Response Target deriving (Eq, Show)
 
@@ -38,11 +41,11 @@ class WithStimulus a where
   features :: a -> Features
 
 data Function
-  = Function String [Stimulatable] Int
+  = Function String [Connection] Int
   deriving (Eq, Show)
 
 instance WithStimulus Function where
-  features (Function _ s _) = foldl (+) 0 (map (\(Stimulatable a) -> features a) s)
+  features (Function _ s _) = foldl (+) 0 (map (\(Stimulatable a, _) -> features a) s)
 
 data Stimulus
   = Stimulus String Features
@@ -52,7 +55,7 @@ instance WithStimulus Stimulus where
   features (Stimulus _ f) = f
 
 data Response
-  = Response [Stimulatable]
+  = Response [Connection]
   deriving (Eq, Show)
 
 data Stimulatable = forall a. (Show a, Eq a, Typeable a, WithStimulus a) => Stimulatable a
