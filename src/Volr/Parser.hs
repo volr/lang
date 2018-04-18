@@ -28,8 +28,8 @@ parse s =
 
 modelParser :: Parser Model
 modelParser = do
-  stimuli <- (space *> P.try (many ( parseStimulus)))
-  functions <- (space *> P.try (many (parseFunction)))
+  stimuli <- (many (P.try (space *> parseStimulus)))
+  functions <- (many (P.try (space *> parseFunction)))
   Model <$> (space *> parseResponse) <*> (space *> parseTarget)
 
 parseResponse :: Parser Response
@@ -54,7 +54,7 @@ parseFunction = do
   return function
 
 parseConnectionList :: Parser [Connection]
-parseConnectionList = (:) <$> (string "from" *> space *> parseConnection) <*> many (P.try (space *> char ',' *> space *> parseConnection))
+parseConnectionList = (:) <$> (string "from" *> space *> parseConnection) <*> (many (P.try (space *> string "from" *> space *> parseConnection)))
 
 parseConnection :: Parser Connection
 parseConnection = Connection <$> parseStimulatable

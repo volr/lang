@@ -1,11 +1,11 @@
-stimulus s [2]
+stimulus s
+  input: [1, 2, 3]
 
 function f from s excitatory
-  weight: 100
-  neurons: 1
+  weight: 1
+  neurons: 10
 
 response from f excitatory
 
 target nest
-  input: [0.1, 0.2, 0.25]
-  output: y
+  runtime: 90
