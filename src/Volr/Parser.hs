@@ -12,7 +12,7 @@ import Data.Char
 import qualified Data.Map as Map
 import Data.Void
 
-import Myelin.SNN (ExecutionTarget(Spikey, Nest), SynapseEffect(Excitatory, Inhibitory))
+import Myelin.SNN (ExecutionTarget(BrainScaleS, Spikey, Nest), SynapseEffect(Excitatory, Inhibitory))
 import Volr.Ast
 
 type Error = ParseError (P.Token String) String
@@ -38,8 +38,8 @@ parseResponse = Response
 
 parseStimulus :: Parser Stimulus
 parseStimulus = do
-  stimulus <- Stimulus <$> (string "stimulus" *> space1 *> parseName) <*> (space1 *> parseFeatures)
-  let (Stimulus name _) = stimulus
+  stimulus <- Stimulus <$> (string "stimulus" *> space1 *> parseName) <*> (space *> parseDataSource) <*> (pure 2) -- TODO: Make features backend dependent or remove from Futhark
+  let (Stimulus name _ _) = stimulus
   modify (\m -> Map.insert name (Stimulatable stimulus) m)
   return stimulus
 
@@ -71,10 +71,19 @@ parseStimulatable = do
 
 parseTarget :: Parser Target
 parseTarget = Target
-  <$> ((string "target") *> space1 *> ((P.try (string' "futhark") *> (pure Futhark)) <|> (string' "nest") *> (pure (Myelin (Nest 0 0)))))
-  <*> (space *> parseDataSource)
-  <*> (space *> parseNamedField "output" parseName)
--- (P.try (string' "spikey") *> (pure (Myelin (Spikey 0)))) <|>
+  <$> ((string "target") *> space1 *> ((P.try parseFutharkBackend) <|> parseMyelinBackend))
+
+parseFutharkBackend :: Parser Backend
+parseFutharkBackend = (string' "futhark") *> (Futhark <$> (space *> (parseNamedField "output" parseName)) <*> (space *> parseFeatures))
+
+parseMyelinBackend :: Parser Backend
+parseMyelinBackend = Myelin <$> (space *> parseExecutionTarget) <*> (space *> (parseNamedField "runtime" parseNumber))
+
+parseExecutionTarget :: Parser ExecutionTarget
+parseExecutionTarget = (P.try (string' "nest" *> pure (Nest 0 0))) <|> parseBrainScaleSTarget
+
+parseBrainScaleSTarget :: Parser ExecutionTarget
+parseBrainScaleSTarget = string' "brainscales" *> (BrainScaleS <$> (space *> (parseNamedField "wafer" parseInteger)) <*> (space *> (parseNamedField "hicann" parseInteger)))
 
 parseDataSource :: Parser DataSource
 parseDataSource = (P.try (Array <$> (parseNamedField "input" (parseList parseNumber))) <|> (File <$> (parseNamedField "input" parseName)))
@@ -99,7 +108,7 @@ parseInteger = (L.lexeme space) L.decimal
 parseName :: Parser String
 parseName = some (alphaNumChar <|> punctuationChar)
 
-parseNumber :: Parser Float
+parseNumber :: (RealFloat a) => Parser a
 parseNumber = (P.try L.float) <|> (fromIntegral <$> L.decimal)
 
 parseList :: Parser a -> Parser [a]

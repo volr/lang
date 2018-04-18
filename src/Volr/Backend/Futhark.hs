@@ -35,7 +35,7 @@ discoverFeatureList list [(Connection x _ _)] =
     case (cast x :: Maybe Function) of
       Just (Function _ xs size) -> discoverFeatureList (size : list) xs
       _ -> case (cast x :: Maybe Stimulus) of
-        Just (Stimulus _ features) -> Right (features : list)
+        Just (Stimulus _ _ features) -> Right (features : list)
         _ -> Left ("Unknown entity with stimulus " ++ (show x))
 discoverFeatureList list _ = Left "Responses with anything but one input not yet supported"
 
@@ -47,7 +47,7 @@ featureListToFuthark [s1, s2, out]
 featureListToFuthark s = Left $ "Unsupported number of layers " ++ (show (length s))
 
 generateFuthark :: Model -> Either String FutharkEvaluation
-generateFuthark (Model (Response xs) (Target Futhark (File xFile) yFile)) =
+generateFuthark (Model (Response xs) (Target (Futhark yFile features))) =
   let
     modulePrefix n = "module N = Network" ++ n ++ " (f64) {\n"
     modulePostfix = "\n}\n"
@@ -61,7 +61,7 @@ generateFuthark (Model (Response xs) (Target Futhark (File xFile) yFile)) =
           ++ "\nlet learning_rate = 0.5" -- TODO: ++ (show learning_rate)
           ++ modulePostfix
           ++ futharkPostample
-      , xFile = xFile
+      , xFile = "" -- TODO: Implement graph network
       , yFile = yFile }) $ featureListToFuthark list
 generateFuthark (Model r b) = Left $ "Unsupported backend " ++ show b
 

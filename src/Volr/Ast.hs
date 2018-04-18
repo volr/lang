@@ -20,12 +20,12 @@ import Data.Typeable
 import Myelin.SNN (ExecutionTarget, SynapseEffect)
 
 data Backend
-  = Futhark
-  | Myelin ExecutionTarget
+  = Futhark String Features
+  | Myelin ExecutionTarget Double
   deriving (Eq, Show)
 
 data Target
-  = Target Backend DataSource String
+  = Target Backend
   deriving (Eq, Show)
 
 data DataSource
@@ -56,11 +56,11 @@ instance WithStimulus Function where
   features (Function _ s _) = foldl (+) 0 (map (\(Connection (Stimulatable a) _ _) -> features a) s)
 
 data Stimulus
-  = Stimulus String Features
+  = Stimulus String DataSource Features
   deriving (Eq, Show)
 
 instance WithStimulus Stimulus where
-  features (Stimulus _ f) = f
+  features (Stimulus _ _ f) = f
 
 data Response
   = Response [Connection]
