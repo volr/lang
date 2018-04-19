@@ -17,10 +17,13 @@ import Myelin.SNN
 import qualified Myelin.Spikey
 
 runMyelin :: Model -> Either String (IO String)
-runMyelin model@(Model _ (Target (Myelin target@(Nest _ _) runtime))) =
-  let snn = parseMyelin model
-      task = toTask snn target runtime
-  in Right $ pure $ taskToJSON task
+runMyelin model@(Model _ (Target (Myelin target runtime))) =
+  case target of
+    (Spikey _) -> Left $ "Unsupported backend " ++ (show target)
+    SpiNNaker -> Left $ "Unsupported backend " ++ (show target)
+    _ -> let snn = parseMyelin model
+             task = toTask snn target runtime
+         in Right $ pure $ taskToJSON task
 runMyelin model@(Model _ (Target b)) = Left $ "Unsupported backend " ++ (show b)
 
 parseMyelin :: Model -> SNN () Identity
