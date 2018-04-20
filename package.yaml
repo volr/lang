@@ -1,5 +1,5 @@
 name:                volr
-version:             0.1.0.0
+version:             0.2.0.0
 github:              "githubuser/volr"
 license:             BSD3
 author:              "Jens Egholm Pedersen"
@@ -25,13 +25,15 @@ dependencies:
 library:
   source-dirs: src
   dependencies:
-    - megaparsec
-    - containers
-    - mtl
-    - process
     - base
+    - containers
+    - dimensional
     - directory
+    - megaparsec
+    - mtl
     - myelin
+    - process
+    - scientific
     - text
 
 executables:

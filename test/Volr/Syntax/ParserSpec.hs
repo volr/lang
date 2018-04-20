@@ -26,13 +26,29 @@ spec = do
     --   }
     -- | ExperimentExpr [Expr]
     -- | FieldExpr String Expr
-    -- | IntExpr Integer
     -- | ListExpr [Expr]
-    -- | RealExpr
-    -- | StringExpr String
 
     it "can parse an empty experiment" $ do
       parse "" `shouldBe` (Right (ExperimentExpr []))
+
+-- Aggregations
+
+    -- it "can parse a field" $ do
+    --   let (r, s) = runState (P.runParserT parseField 1 "" "") Map.empty
+    --   r `shouldBe` (Right (IntExpr ))
+    --   s `shouldBe` (Map.empty)
+    --
+    -- it "can fail to parse a field with wrong indentation" $ do
+    --   let (r, s) = runState (P.runParserT parseInt "" "101") Map.empty
+    --   r `shouldBe` (Right (IntExpr 101))
+    --   s `shouldBe` (Map.empty)
+    --
+    -- it "can parse a field" $ do
+    --   let (r, s) = runState (P.runParserT parseInt "" "101") Map.empty
+    --   r `shouldBe` (Right (IntExpr 101))
+    --   s `shouldBe` (Map.empty)
+    --
+    -- it "can parse a list" $ do
 
 -- Scalars
 
@@ -41,9 +57,9 @@ spec = do
       r `shouldBe` (Right (IntExpr 101))
       s `shouldBe` (Map.empty)
 
-    it "can parse a real" $ do
-      let (r, s) = runState (P.runParserT parseReal "" "10.2") Map.empty
-      r `shouldBe` (Right (RealExpr 10.2))
+    it "can parse a quantity" $ do
+      let (r, s) = runState (P.runParserT parseQuantity "" "10.2 ms") Map.empty
+      r `shouldBe` (Right (QuantityExpr 10.2 (StringExpr "ms")))
       s `shouldBe` (Map.empty)
 
     it "can parse a string" $ do
