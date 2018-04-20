@@ -7,6 +7,8 @@ import qualified Data.Map as Map
 
 import qualified Text.Megaparsec as P
 import Text.Megaparsec (customFailure, ParseError,ParsecT)
+import Text.Megaparsec.Char
+import qualified Text.Megaparsec.Char.Lexer as L
 
 import Volr.Syntax.AST
 
@@ -20,3 +22,12 @@ parse code = evalState (P.runParserT experimentParser "" code) Map.empty
 
 experimentParser :: Parser Expr
 experimentParser = pure (ExperimentExpr [])
+
+parseInt :: Parser Expr
+parseInt = IntExpr <$> (L.lexeme space) L.decimal
+
+parseReal :: Parser Expr
+parseReal = RealExpr <$> ((P.try L.float) <|> (fromIntegral <$> L.decimal))
+
+parseString :: Parser Expr
+parseString = StringExpr <$> some (alphaNumChar <|> punctuationChar)

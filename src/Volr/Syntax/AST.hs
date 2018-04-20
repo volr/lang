@@ -10,6 +10,6 @@ data Expr
   | FieldExpr String Expr
   | IntExpr Integer
   | ListExpr [Expr]
-  | RealExpr
+  | RealExpr Double
   | StringExpr String
   deriving (Eq, Show)
