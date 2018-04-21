@@ -12,6 +12,7 @@ data Expr
   | FieldExpr String Expr
   | IntExpr Integer
   | ListExpr [Expr]
+  | RealExpr Double
   | StringExpr String
-  | QuantityExpr Double Expr
+  | QuantityExpr Expr Expr
   deriving (Eq, Show)
