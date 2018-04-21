@@ -29,10 +29,14 @@ experimentParser = pure (ExperimentExpr [])
 
 -- Aggregations
 
+parseField :: Parser Expr -> Parser Expr
+parseField innerParser = FieldExpr <$> (P.some alphaNumChar <* space <* (string ":") <* space) <*> innerParser
+
 parseList :: Parser Expr -> Parser Expr
 parseList inner = do
   let list = (parseScalar `P.sepBy` (space *> char ',' *> space)) <|> (pure [])
   ListExpr <$> (string "[" *> space *> list <* space <* string "]")
+
 -- Scalars
 
 parseScalar :: Parser Expr

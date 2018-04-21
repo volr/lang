@@ -54,11 +54,9 @@ spec = do
     --   r `shouldBe` (Right (IntExpr 101))
     --   s `shouldBe` (Map.empty)
     --
-    -- it "can parse a field" $ do
-    --   let (r, s) = runState (P.runParserT parseInt "" "101") Map.empty
-    --   r `shouldBe` (Right (IntExpr 101))
-    --   s `shouldBe` (Map.empty)
-    --
+    it "can parse a field" $ do
+      parseSuccess "test: value" (parseField parseString) (FieldExpr "test" (StringExpr "value"))
+
     it "can parse a list of scalars" $ do
       parseSuccess "[1, 2, 3]" (parseList parseScalar) (ListExpr [RealExpr 1, RealExpr 2, RealExpr 3])
 
