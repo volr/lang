@@ -22,14 +22,17 @@ experimentParser :: Parser Expr
 experimentParser = pure (ExperimentExpr [])
 
 -- Block
+-- Thanks to: https://markkarpov.com/megaparsec/indentation-sensitive-parsing.html
 parseBlock :: Parser Expr
-parseBlock = do
-  category <- parseString
-  name <- inlineSpace *> Megaparsec.optional parseString
-  let fieldParser = (parseList parseScalar) <|> parseScalar
-  let nestedParser = (parseField fieldParser) <|> (parseList parseScalar)
-  let indentOpt = return $ Lexer.IndentSome Nothing (return . (BlockExpr category name)) nestedParser
-  Lexer.nonIndented newlineSpace (Lexer.indentBlock newlineSpace indentOpt)
+parseBlock = Lexer.nonIndented inlineSpace (Lexer.indentBlock inlineSpace innerParser)
+  where
+    innerParser = do
+      category <- parseString
+      name <- Megaparsec.try (inlineSpace *> Megaparsec.optional parseString)
+      let fieldParser = (parseList parseScalar) <|> parseScalar
+      let nestedParser = (parseField fieldParser) <|> (parseList parseScalar)
+      return $ Lexer.IndentMany Nothing (return . (BlockExpr category name)) nestedParser
+
 
 -- Aggregations
 

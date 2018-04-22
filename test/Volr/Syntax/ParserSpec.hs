@@ -39,17 +39,17 @@ spec = do
     -- | FieldExpr String Expr
     -- | ListExpr [Expr]
 
---     it "can parse an empty experiment" $ do
---       parse "" `shouldBe` (Right (ExperimentExpr []))
---
---     it "can parse a block without a label or fields" $ do
---       parseSuccess "some" parseBlock (BlockExpr "some" Nothing [])
---
---     it "can parse a block with a label but without fields" $ do
---       parseSuccess "some a" parseBlock (BlockExpr "some" (Just "a") [])
---
---     it "can parse a block with without a label and with a single field" $ do
---       parseSuccess "some\n  thing: x" parseBlock (BlockExpr "some" Nothing [FieldExpr "thing" (StringExpr "x")])
+    it "can parse an empty experiment" $ do
+      parse "" `shouldBe` (Right (ExperimentExpr []))
+
+    it "can parse a block without a label or fields" $ do
+      parseSuccess "some" parseBlock (BlockExpr "some" Nothing [])
+
+    it "can parse a block with a label but without fields" $ do
+      parseSuccess "some a" parseBlock (BlockExpr "some" (Just "a") [])
+
+    it "can parse a block with without a label and with a single field" $ do
+      parseSuccess "some\n  thing: x" parseBlock (BlockExpr "some" Nothing [FieldExpr "thing" (StringExpr "x")])
 --
 --     it "can parse a block with a label and a single field, indented with two spaces" $ do
 --       parseSuccess "some a\n  thing: x" parseBlock (BlockExpr "some" (Just "a") [FieldExpr "thing" (StringExpr "x")])
