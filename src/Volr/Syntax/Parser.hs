@@ -6,54 +6,71 @@ import Control.Monad.State.Lazy
 import qualified Data.Map as Map
 import qualified Data.Scientific as Scientific
 
-import qualified Text.Megaparsec as P
-import Text.Megaparsec (customFailure, ParseError, Parsec)
-import Text.Megaparsec.Char
-import qualified Text.Megaparsec.Char.Lexer as L
+import qualified Text.Megaparsec as Megaparsec
+import qualified Text.Megaparsec.Char as Char
+import qualified Text.Megaparsec.Char.Lexer as Lexer
 
 import Volr.Syntax.AST
 
-type SyntaxError = ParseError (P.Token String) String
-type Parser = Parsec String String
-
--- Static values
-indentationSpaceTwo = "  "
-indentationSpaceFour = "    "
-indentationTabs = "\t"
+type SyntaxError = Megaparsec.ParseError (Megaparsec.Token String) String
+type Parser = Megaparsec.Parsec String String
 
 parse :: String -> Either SyntaxError Expr
-parse code = P.runParser experimentParser "" code
+parse code = Megaparsec.runParser experimentParser "" code
 
 experimentParser :: Parser Expr
 experimentParser = pure (ExperimentExpr [])
 
+-- Block
+parseBlock :: Parser Expr
+parseBlock = do
+  category <- parseString
+  name <- inlineSpace *> Megaparsec.optional parseString
+  let fieldParser = (parseList parseScalar) <|> parseScalar
+  let nestedParser = (parseField fieldParser) <|> (parseList parseScalar)
+  let indentOpt = return $ Lexer.IndentSome Nothing (return . (BlockExpr category name)) nestedParser
+  Lexer.nonIndented newlineSpace (Lexer.indentBlock newlineSpace indentOpt)
+
 -- Aggregations
 
 parseField :: Parser Expr -> Parser Expr
-parseField innerParser = FieldExpr <$> (P.some alphaNumChar <* space <* (string ":") <* space) <*> innerParser
+parseField innerParser = FieldExpr <$> (parseString <* inlineSpace <* (Char.string ":") <* inlineSpace) <*> innerParser
 
 parseList :: Parser Expr -> Parser Expr
 parseList inner = do
-  let list = (parseScalar `P.sepBy` (space *> char ',' *> space)) <|> (pure [])
-  ListExpr <$> (string "[" *> space *> list <* space <* string "]")
+  let list = (inner `Megaparsec.sepBy` (newlineSpace *> (Char.char ',') <* newlineSpace))
+  ListExpr <$> (Char.string "[" *> newlineSpace *> list <* newlineSpace <* (Char.string "]"))
 
 -- Scalars
 
 parseScalar :: Parser Expr
-parseScalar = (P.try parseQuantity) <|> (P.try parseReal) <|> (P.try parseInt) <|> parseString
+parseScalar = (Megaparsec.try parseQuantity) <|> (Megaparsec.try parseNumber) <|> parseName
 
-parseInt :: Parser Expr
-parseInt = IntExpr <$> (L.signed (void spaceChar) L.decimal)
+parseName :: Parser Expr
+parseName = StringExpr <$> parseString
+
+parseNumber :: Parser Expr
+parseNumber = do
+  number <- Lexer.signed inlineSpace (Megaparsec.try (Lexer.float :: Parser Double) <|> (fromIntegral <$> Lexer.decimal))
+  let int = round number
+  return $ if number == (fromIntegral int) then IntExpr int else RealExpr number
 
 parseQuantity :: Parser Expr
-parseQuantity = QuantityExpr <$> parseReal <*> (space *> parseString)
+parseQuantity = QuantityExpr <$> parseNumber <*> (inlineSpace *> parseName)
 
-parseReal :: Parser Expr
-parseReal = RealExpr <$> (L.signed space (P.try L.float) <|> (fromIntegral <$> L.decimal))
+parseString :: Parser String
+parseString = Megaparsec.some (Char.alphaNumChar <|> (Char.char '_') <|> (Char.char '-') <|> (Char.char '.'))
 
-parseString :: Parser Expr
-parseString = StringExpr <$> P.some (alphaNumChar <|> (char '.'))
+-- Spaces
+inlineSpace :: Parser ()
+inlineSpace = Lexer.space (Megaparsec.takeWhile1P Nothing f *> pure ()) lineComment empty
+  where f x = x == ' ' || x == '\t'
 
--- parseIndentation :: Int -> Parser ()
--- parseIndentation 0 = (pure ())
--- parseIndentation n = (P.try )
+inlineSpaces :: Parser ()
+inlineSpaces = Megaparsec.many inlineSpace *> pure ()
+
+lineComment :: Parser ()
+lineComment = Lexer.skipLineComment "#"
+
+newlineSpace :: Parser ()
+newlineSpace = Lexer.space Char.space1 lineComment empty

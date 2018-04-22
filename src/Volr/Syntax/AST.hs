@@ -4,8 +4,8 @@ import Numeric.Units.Dimensional
 
 data Expr
   = BlockExpr
-    { category :: Maybe String
-    , label :: String
+    { category ::  String
+    , label :: Maybe String
     , entries :: [Expr]
     }
   | ExperimentExpr [Expr]
