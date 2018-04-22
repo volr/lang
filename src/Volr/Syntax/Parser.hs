@@ -4,11 +4,13 @@ import Control.Applicative hiding (many, some)
 import Control.Monad.State.Lazy
 
 import qualified Data.Map as Map
+import Data.Maybe (isJust)
 import qualified Data.Scientific as Scientific
 
 import qualified Text.Megaparsec as Megaparsec
 import qualified Text.Megaparsec.Char as Char
 import qualified Text.Megaparsec.Char.Lexer as Lexer
+import qualified Text.Megaparsec.Pos as Pos
 
 import Volr.Syntax.AST
 
@@ -24,15 +26,16 @@ experimentParser = pure (ExperimentExpr [])
 -- Block
 -- Thanks to: https://markkarpov.com/megaparsec/indentation-sensitive-parsing.html
 parseBlock :: Parser Expr
-parseBlock = Lexer.nonIndented inlineSpace (Lexer.indentBlock inlineSpace innerParser)
+parseBlock = Lexer.nonIndented newlineSpace (Lexer.indentBlock newlineSpace innerOpt)
   where
-    innerParser = do
+    innerOpt = do
       category <- parseString
       name <- Megaparsec.try (inlineSpace *> Megaparsec.optional parseString)
+      eof <- Megaparsec.optional Megaparsec.eof
+      let indentType = if isJust eof then Lexer.IndentMany else Lexer.IndentSome
       let fieldParser = (parseList parseScalar) <|> parseScalar
-      let nestedParser = (parseField fieldParser) <|> (parseList parseScalar)
-      return $ Lexer.IndentMany Nothing (return . (BlockExpr category name)) nestedParser
-
+      let nestedParser = Megaparsec.try ((parseField fieldParser) <|> (parseList parseScalar))
+      return $ indentType Nothing (return . (BlockExpr category name)) nestedParser
 
 -- Aggregations
 

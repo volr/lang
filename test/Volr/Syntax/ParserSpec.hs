@@ -50,25 +50,25 @@ spec = do
 
     it "can parse a block with without a label and with a single field" $ do
       parseSuccess "some\n  thing: x" parseBlock (BlockExpr "some" Nothing [FieldExpr "thing" (StringExpr "x")])
---
---     it "can parse a block with a label and a single field, indented with two spaces" $ do
---       parseSuccess "some a\n  thing: x" parseBlock (BlockExpr "some" (Just "a") [FieldExpr "thing" (StringExpr "x")])
---
---     it "can parse a block with a label and a single field, indented with four spaces" $ do
---       parseSuccess "some a\n    thing: x" parseBlock (BlockExpr "some" (Just "a") [FieldExpr "thing" (StringExpr "x")])
---
---     it "can parse a block with a label and a single field, indented with tab" $ do
---       parseSuccess "some a\n\tthing: x" parseBlock (BlockExpr "some" (Just "a") [FieldExpr "thing" (StringExpr "x")])
---
---     it "can parse a block with a label and multiple fields" $ do
---       parseSuccess "some a\n  thing: x\n  else: y" parseBlock (BlockExpr "some" (Just "a") [FieldExpr "thing" (StringExpr "x"), FieldExpr "else" (StringExpr "y")])
---
---     it "can fail to parse a block with wrong indentation" $ do
---       parseFail "some a\nthing: x" parseBlock
---
---     it "can fail to parse a block with differing indentation" $ do
---       parseFail "some a\n  thing: x\n    else: y" parseBlock
---
+
+    it "can parse a block with a label and a single field, indented with two spaces" $ do
+      parseSuccess "some a\n  thing: x" parseBlock (BlockExpr "some" (Just "a") [FieldExpr "thing" (StringExpr "x")])
+
+    it "can parse a block with a label and a single field, indented with four spaces" $ do
+      parseSuccess "some a\n    thing: x" parseBlock (BlockExpr "some" (Just "a") [FieldExpr "thing" (StringExpr "x")])
+
+    it "can parse a block with a label and a single field, indented with tab" $ do
+      parseSuccess "some a\n\tthing: x" parseBlock (BlockExpr "some" (Just "a") [FieldExpr "thing" (StringExpr "x")])
+
+    it "can parse a block with a label and multiple fields" $ do
+      parseSuccess "some a\n  thing: x\n  else: y" parseBlock (BlockExpr "some" (Just "a") [FieldExpr "thing" (StringExpr "x"), FieldExpr "else" (StringExpr "y")])
+
+    it "can fail to parse a block with no indentation" $ do
+      parseFail "some a\nthing: x" parseBlock
+
+    it "can fail to parse a block with differing indentation" $ do
+      parseFail "some a\n  thing: x\n    else: y" parseBlock
+
 -- Aggregations
 
     it "can parse a field" $ do
