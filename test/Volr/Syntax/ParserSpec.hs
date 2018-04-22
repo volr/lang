@@ -39,8 +39,14 @@ spec = do
     -- | FieldExpr String Expr
     -- | ListExpr [Expr]
 
-    it "can parse an empty experiment" $ do
-      parse "" `shouldBe` (Right (ExperimentExpr []))
+    it "can fail to parse an empty experiment" $ do
+      parseFail "" parseExperiment
+
+    it "can parse a single-block experiment" $ do
+      parseSuccess "some" parseExperiment $ ExperimentExpr [BlockExpr "some" Nothing []]
+
+    it "can parse a double-block experiment" $ do
+      parseSuccess "some\n\nthing" parseExperiment $ ExperimentExpr [BlockExpr "some" Nothing [], BlockExpr "thing" Nothing []]
 
     it "can parse a block without a label or fields" $ do
       parseSuccess "some" parseBlock (BlockExpr "some" Nothing [])

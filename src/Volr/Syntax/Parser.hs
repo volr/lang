@@ -18,10 +18,10 @@ type SyntaxError = Megaparsec.ParseError (Megaparsec.Token String) String
 type Parser = Megaparsec.Parsec String String
 
 parse :: String -> Either SyntaxError Expr
-parse code = Megaparsec.runParser experimentParser "" code
+parse code = Megaparsec.runParser parseExperiment "" code
 
-experimentParser :: Parser Expr
-experimentParser = pure (ExperimentExpr [])
+parseExperiment :: Parser Expr
+parseExperiment = ExperimentExpr <$> Megaparsec.some (newlineSpace *> parseBlock)
 
 -- Block
 -- Thanks to: https://markkarpov.com/megaparsec/indentation-sensitive-parsing.html
@@ -31,7 +31,7 @@ parseBlock = Lexer.nonIndented newlineSpace (Lexer.indentBlock newlineSpace inne
     innerOpt = do
       category <- parseString
       name <- Megaparsec.try (inlineSpace *> Megaparsec.optional parseString)
-      eof <- Megaparsec.optional Megaparsec.eof
+      eof <- Megaparsec.optional (Megaparsec.eof <|> (Megaparsec.try (Char.newline *> Char.newline *> pure())))
       let indentType = if isJust eof then Lexer.IndentMany else Lexer.IndentSome
       let fieldParser = (parseList parseScalar) <|> parseScalar
       let nestedParser = Megaparsec.try ((parseField fieldParser) <|> (parseList parseScalar))
