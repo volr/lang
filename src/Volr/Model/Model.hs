@@ -1,7 +1,7 @@
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE RecordWildCards #-}
 
-module Volr.Ast
+module Volr.Model.Model
   ( Backend(Futhark, Myelin)
   , Connection(Connection)
   , DataSource(File, Array)
@@ -18,6 +18,9 @@ module Volr.Ast
 
 import Data.Typeable
 import Myelin.SNN (ExecutionTarget, SynapseEffect)
+
+-- | A model of the learning process
+data Model = Model Response Target deriving (Eq, Show)
 
 data Backend
   = Futhark String Features
@@ -41,9 +44,6 @@ data Connection = Connection
 
 instance WithStimulus Connection where
   features (Connection (Stimulatable s) _ _) = features s
-
-  -- | A model of the learning process
-data Model = Model Response Target deriving (Eq, Show)
 
 class WithStimulus a where
   features :: a -> Features

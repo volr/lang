@@ -1,6 +1,6 @@
 module Volr.Backend (Backend(Futhark, Myelin), run) where
 
-import Volr.Ast
+import Volr.Model.Model
 
 import Volr.Backend.Futhark
 import Volr.Backend.Myelin

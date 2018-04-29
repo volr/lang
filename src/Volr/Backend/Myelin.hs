@@ -11,7 +11,7 @@ import qualified Data.Text as T
 import qualified Data.Text.Lazy as TL
 import Data.Typeable
 
-import Volr.Ast
+import Volr.Model.Model
 
 import Myelin.SNN
 import qualified Myelin.Spikey

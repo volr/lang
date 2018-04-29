@@ -7,7 +7,7 @@ import System.Directory
 import System.Process
 import GHC.IO.Handle
 
-import Volr.Ast
+import Volr.Model.Model
 
 futharkBackendDir = "futhark-backend/src/"
 

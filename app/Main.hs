@@ -5,7 +5,7 @@ import Data.Semigroup ((<>))
 
 import System.IO (hPutStrLn, stderr)
 
-import Volr.Ast
+import Volr.Model.Model
 import Volr.Parser
 import Volr.Backend
 
