@@ -88,12 +88,15 @@ parseStimulus s = throwError $ "Expected stimulus, but got " ++ (show s)
 
 parseDataSource :: Expr -> ModelState DataSource
 parseDataSource (FieldExpr "file" (StringExpr fileName)) = return (File fileName)
-parseDataSource (FieldExpr "array" (ListExpr xs)) = fmap Array (parseNumberList xs)
+parseDataSource (FieldExpr "array" l@(ListExpr _)) = fmap Array (parseNumberList l)
 parseDataSource _ = throwError "Error"
 
-parseNumberList :: [Expr] -> ModelState [Float]
-parseNumberList ((RealExpr d):rest) = fmap (\t -> ((realToFrac d):t)) (parseNumberList rest)
-parseNumberList [] = return []
+parseNumberList :: Expr -> ModelState [Float]
+parseNumberList (ListExpr list) = return $ listToFloats list
+  where
+    listToFloats ((RealExpr first):rest) = (realToFrac first) : (listToFloats rest)
+    listToFloats [] = []
+parseNumberList t = throwError $ "Expected list of numbers, but got " ++ (show t)
 
 -- Internal
 

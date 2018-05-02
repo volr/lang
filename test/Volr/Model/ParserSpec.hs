@@ -30,3 +30,9 @@ spec = do
 
     it "can parse a block to a stimulus" $ do
       parseSuccess (BlockExpr "stimulus" Nothing [FieldExpr "file" (StringExpr "x")]) parseStimulus (Stimulus "stimulus1" (File "x"))
+
+    it "can parse a data source from an array" $ do
+      parseSuccess (FieldExpr "array" (ListExpr [(RealExpr 1), (RealExpr 2), (RealExpr 3)])) parseDataSource $ Array [1, 2, 3]
+
+    it "can parse a data source from a file" $ do
+      parseSuccess (FieldExpr "file" (StringExpr "x")) parseDataSource $ File "x"

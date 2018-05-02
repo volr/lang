@@ -1,11 +1,12 @@
 stimulus s
-  input: [1, 2, 3]
+  array: [1, 2, 3]
 
-function f from s excitatory
+population f
   weight: 1
   neurons: 10
 
-response from f excitatory
+response
+  from: f
 
 target nest
   runtime: 90
