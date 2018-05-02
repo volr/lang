@@ -30,15 +30,7 @@ parseFail code parser = isLeft (P.runParser parser "" code) `shouldBe` True
 spec :: Spec
 spec = do
   describe "The AST parser" $ do
-    -- BlockExpr
-    --   { category :: Maybe String
-    --   , label :: String
-    --   , entries :: [Expr]
-    --   }
-    -- | ExperimentExpr [Expr]
-    -- | FieldExpr String Expr
-    -- | ListExpr [Expr]
-
+    
     it "can fail to parse an empty experiment" $ do
       parseFail "" parseExperiment
 

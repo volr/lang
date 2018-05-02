@@ -1,77 +1,40 @@
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE RecordWildCards #-}
 
-module Volr.Model.Model
-  ( Backend(Futhark, Myelin)
-  , Connection(Connection)
-  , DataSource(File, Array)
-  , Model(Model)
-  , Function(Function)
-  , Stimulus(Stimulus)
-  , Response(Response)
-  , Features
-  , Stimulatable(Stimulatable)
-  , Target(Target)
-  , WithStimulus(features)
-  )
- where
+module Volr.Model.Model where
 
 import Data.Typeable
-import Myelin.SNN (ExecutionTarget, SynapseEffect)
+import Myelin.SNN (ExecutionTarget)
 
 -- | A model of the learning process
-data Model = Model Response Target deriving (Eq, Show)
+data Model = Model Response Backend deriving (Eq, Show)
 
+-- | A response that accumulates one of more node
+newtype Response = Response [Connection] deriving (Eq, Show)
+
+-- | A node is a group of neurons or a source of input stimulus.
+--   Common for them both is that they /emit/ data in some form
+data Node
+  = Population String Integer [Connection]
+  | Stimulus String DataSource
+  deriving (Eq, Show)
+
+-- | A connection /from/ the given 'Node' with a given weight. If the weight
+--   is negative, the connection is treated as inhibitory in spiking neural
+--   networks.
+data Connection = Connection
+  { target :: Node
+  , weight :: Float
+  } deriving (Eq, Show)
+
+-- | The available backends on which the models can be evaluated.
 data Backend
-  = Futhark String Features
-  | Myelin ExecutionTarget Double
+  = Myelin ExecutionTarget Double
+  -- | Futhark String
   deriving (Eq, Show)
 
-data Target
-  = Target Backend
-  deriving (Eq, Show)
-
+-- | A source of input data (stimulus)
 data DataSource
   = File String
   | Array [Float]
   deriving (Eq, Show)
-
-data Connection = Connection
-  { stimulatable :: Stimulatable
-  , effect :: SynapseEffect
-  , weight :: Float
-  } deriving (Eq, Show)
-
-instance WithStimulus Connection where
-  features (Connection (Stimulatable s) _ _) = features s
-
-class WithStimulus a where
-  features :: a -> Features
-
-data Function
-  = Function String [Connection] Int
-  deriving (Eq, Show)
-
-instance WithStimulus Function where
-  features (Function _ s _) = foldl (+) 0 (map (\(Connection (Stimulatable a) _ _) -> features a) s)
-
-data Stimulus
-  = Stimulus String DataSource Features
-  deriving (Eq, Show)
-
-instance WithStimulus Stimulus where
-  features (Stimulus _ _ f) = f
-
-data Response
-  = Response [Connection]
-  deriving (Eq, Show)
-
-data Stimulatable = forall a. (Show a, Eq a, Typeable a, WithStimulus a) => Stimulatable a
-instance Show Stimulatable where
-  show (Stimulatable s) = show s
-
-instance Eq Stimulatable where
-  Stimulatable a == Stimulatable b = maybe False (== b) (cast a)
-
--- | A number of boolean features to express in the model
-type Features = Int

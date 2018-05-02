@@ -13,34 +13,34 @@ import Data.Typeable
 
 import Volr.Model.Model
 
-import Myelin.SNN
+import qualified Myelin.SNN as Myelin
 import qualified Myelin.Spikey
 
 runMyelin :: Model -> Either String (IO String)
-runMyelin model@(Model _ (Target (Myelin target runtime))) =
+runMyelin model@(Model _ (Myelin target runtime)) =
   case target of
-    (Spikey _) -> Left $ "Unsupported backend " ++ (show target)
-    SpiNNaker -> Left $ "Unsupported backend " ++ (show target)
+    (Myelin.Spikey _) -> Left $ "Unsupported backend " ++ (show target)
+    Myelin.SpiNNaker -> Left $ "Unsupported backend " ++ (show target)
     _ -> let snn = parseMyelin model
-             task = toTask snn target runtime
-         in Right $ pure $ taskToJSON task
-runMyelin model@(Model _ (Target b)) = Left $ "Unsupported backend " ++ (show b)
+             task = Myelin.toTask snn target runtime
+         in Right $ pure $ Myelin.taskToJSON task
+runMyelin model@(Model _ b) = Left $ "Unsupported backend " ++ (show b)
 
-parseMyelin :: Model -> SNN () Identity
-parseMyelin (Model (Response xs) (Target _)) = do
-    output <- fileOutput "__ignored__"
+parseMyelin :: Model -> Myelin.SNN () Identity
+parseMyelin (Model (Response xs) _) = do
+    output <- Myelin.fileOutput "__ignored__"
     sequence_ $ map (\c -> projectRecursively output c) xs
 
-projectRecursively :: Node -> Connection -> SNN () Identity
-projectRecursively to (Connection (Stimulatable s) effect weight) = case (cast s :: Maybe Stimulus) of
-  Just (Stimulus name source features) -> do
+projectRecursively :: Myelin.Node -> Connection -> Myelin.SNN () Identity
+projectRecursively to (Connection target weight) = case target of
+  Stimulus name source -> do
     from <- case source of
-      Array xs -> spikeSourceArray xs
-      File inputFile -> fileInput inputFile
-    projection (AllToAll weight False) (Static effect) from to
-  _ -> case (cast s :: Maybe Function) of
-    Just (Function name xs features) -> do
-      from <- population (toInteger features) if_cond_exp_default name True
-      projection (AllToAll weight False) (Static effect) from to
-      sequence_ $ map (\(newConnection) -> projectRecursively from newConnection) xs
-    _ -> return ()
+      Array xs -> Myelin.spikeSourceArray xs
+      File inputFile -> Myelin.fileInput inputFile
+    Myelin.projection (Myelin.AllToAll weight False) (Myelin.Static effect) from to
+  Population name neurons connections -> do
+    from <- Myelin.population neurons Myelin.if_cond_exp_default name True
+    Myelin.projection (Myelin.AllToAll weight False) (Myelin.Static effect) from to
+    sequence_ $ map (\(newConnection) -> projectRecursively from newConnection) connections
+  where
+    effect = if weight >= 0 then Myelin.Inhibitory else Myelin.Excitatory
