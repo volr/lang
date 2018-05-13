@@ -44,8 +44,29 @@ parseField innerParser = FieldExpr <$> (parseString <* inlineSpace <* (Char.stri
 
 parseList :: Parser Expr -> Parser Expr
 parseList inner = do
-  let list = (inner `Megaparsec.sepBy` (newlineSpace *> (Char.char ',') <* newlineSpace))
-  ListExpr <$> (Char.string "[" *> newlineSpace *> list <* newlineSpace <* (Char.string "]"))
+  Char.char '['
+  newlineSpace
+  Megaparsec.choice
+    [ do  Char.char ']'
+          return $ ListExpr []
+    , do  headExpr <- inner
+          newlineSpace
+          parseListHelp inner [headExpr]
+    ]
+
+parseListHelp :: Parser Expr -> [Expr] -> Parser Expr
+parseListHelp inner list = do
+  Megaparsec.choice
+    [ do  Char.char ','
+          newlineSpace
+          pos <- Megaparsec.getPosition
+          next <- inner
+          checkSpace pos
+          Megaparsec.try newlineSpace
+          parseListHelp inner (next:list)
+    , do  Char.char ']'
+          return $ ListExpr (reverse list)
+    ]
 
 -- Scalars
 
@@ -68,6 +89,21 @@ parseString :: Parser String
 parseString = Megaparsec.some (Char.alphaNumChar <|> (Char.char '_') <|> (Char.char '-') <|> (Char.char '.'))
 
 -- Spaces
+
+-- | Verifies that the indentation is above or equal to the expected position
+--   Inspired by the Elm compiler: https://github.com/elm-lang/elm-compiler/blob/master/compiler/src/Parse/Primitives.hs
+checkSpace :: Pos.SourcePos -> Parser ()
+checkSpace (Pos.SourcePos _ _ col) =
+  do  indent <- getIndent
+      if indent > col && indent > (Pos.mkPos 1)
+        then return ()
+        else Megaparsec.customFailure $ "Expected indentation of " ++ (show indent) ++ " or more, but saw " ++ (show col)
+
+getIndent :: Parser Pos.Pos
+getIndent = do
+  Pos.SourcePos _ _ col <- Megaparsec.getPosition
+  return col
+
 inlineSpace :: Parser ()
 inlineSpace = Lexer.space (Megaparsec.takeWhile1P Nothing f *> pure ()) lineComment empty
   where f x = x == ' ' || x == '\t'

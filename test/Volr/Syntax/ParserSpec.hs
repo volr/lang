@@ -30,7 +30,7 @@ parseFail code parser = isLeft (P.runParser parser "" code) `shouldBe` True
 spec :: Spec
 spec = do
   describe "The AST parser" $ do
-    
+
     it "can fail to parse an empty experiment" $ do
       parseFail "" parseExperiment
 
@@ -74,23 +74,25 @@ spec = do
 
     it "can parse a list of scalars" $ do
       parseSuccess "[1, 2, 3]" (parseList parseScalar) (ListExpr [IntExpr 1, IntExpr 2, IntExpr 3])
+      parseSuccess "[1,2,3,4]" (parseList parseScalar) $ ListExpr [IntExpr 1, IntExpr 2, IntExpr 3, IntExpr 4]
 
     it "can parse an empty list" $ do
       parseSuccess "[]" (parseList parseScalar) (ListExpr [])
+      parseSuccess "[ ]" (parseList parseScalar) (ListExpr [])
 
-    -- it "can parse a list with regular indentation" $ do
-    --   parseSuccess "[1,\n 2,\n 3]" (parseList parseNumber) (ListExpr [IntExpr 1, IntExpr 2, IntExpr 3])
-    --
-    -- it "can fail to parse a list with irregular indentation" $ do
-    --   parseFail "[1,\n  2,\n 3]" (parseList parseNumber)
-    --
-    -- it "can parse a list with haskell-like indentation" $ do
-    --   parseSuccess "[ 1\n, 2\n, 3\n]" (parseList parseNumber) (ListExpr [IntExpr 1, IntExpr 2, IntExpr 3])
+    it "can parse a list with regular indentation" $ do
+     parseSuccess "[1,\n  2,\n  3]" (parseList parseNumber) (ListExpr [IntExpr 1, IntExpr 2, IntExpr 3])
+
+    it "can parse a list with haskell-like indentation" $ do
+      parseSuccess "[ 1\n, 2\n, 3\n]" (parseList parseNumber) (ListExpr [IntExpr 1, IntExpr 2, IntExpr 3])
 
 -- Scalars
 
     it "can parse a integer" $ do
       parseSuccess "101" parseNumber (IntExpr 101)
+
+    it "can parse an integer before a linebreak" $ do
+      parseSuccess "102\n" parseNumber (IntExpr 102)
 
     it "can parse a name" $ do
       parseSuccess "hey-there" parseName (StringExpr "hey-there")

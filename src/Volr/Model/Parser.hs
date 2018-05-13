@@ -35,9 +35,9 @@ parse (ExperimentExpr preStimuli) =
       (_, backends) <- parseUntilError postResponses [] parseBackend
       case (responses, backends) of
         ([response], [backend]) -> pure $ Model response backend
-        (rs, _) -> throwError $ "Expected 1 response but got " ++ (show (length rs))
-        (_, bs) -> throwError $ "Expected 1 backend but got " ++ (show (length bs))
-parse s = Left $ "Expected full experiment, but got " ++ (show s)
+        (rs, _) -> throwError $ "Required a model with a single response but found " ++ (show (length rs))
+        (_, bs) -> throwError $ "Required a model with a single backend but found " ++ (show (length bs))
+parse s = Left $ "Expected a full experiment model, but got " ++ (show s)
 
 parseBackend :: Expr -> ModelState Backend
 parseBackend (BlockExpr "backend" (Just target) [FieldExpr "runtime" (RealExpr runtime)]) =
