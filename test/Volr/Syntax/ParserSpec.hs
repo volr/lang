@@ -31,6 +31,8 @@ spec :: Spec
 spec = do
   describe "The AST parser" $ do
 
+-- Experiments
+
     it "can fail to parse an empty experiment" $ do
       parseFail "" parseExperiment
 
@@ -39,6 +41,8 @@ spec = do
 
     it "can parse a double-block experiment" $ do
       parseSuccess "some\n\nthing" parseExperiment $ ExperimentExpr [BlockExpr "some" Nothing [], BlockExpr "thing" Nothing []]
+
+-- Blocks
 
     it "can parse a block without a label or fields" $ do
       parseSuccess "some" parseBlock (BlockExpr "some" Nothing [])
