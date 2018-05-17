@@ -29,6 +29,7 @@ library:
     - containers
     - dimensional
     - directory
+    - fgl
     - megaparsec
     - mtl
     - myelin
@@ -60,6 +61,7 @@ tests:
     - volr
     - megaparsec
     - containers
+    - fgl
     - mtl
     - hspec
     - QuickCheck

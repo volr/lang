@@ -53,10 +53,10 @@ readInput :: Input -> IO String
 readInput (FileInput file) = readFile file
 readInput StdInput = getContents
 
-runBackend :: Model -> Configuration -> IO ()
-runBackend model configuration = do
+runBackend :: Experiment -> Configuration -> IO ()
+runBackend experiment configuration = do
   let (Configuration input output) = configuration
-  case run model of
+  case run experiment of
     Left error -> hPutStrLn stderr error
     Right resultIO -> do
       result <- resultIO
@@ -71,7 +71,7 @@ main = do
     content <- readInput input
     case parse content of
       Left error -> hPutStrLn stderr $ show error
-      Right model -> runBackend model configuration
+      Right experiment -> runBackend experiment configuration
   where
     configuration = info (parseConfig <**> helper)
       ( fullDesc
