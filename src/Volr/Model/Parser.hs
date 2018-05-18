@@ -60,12 +60,14 @@ parse s = Left $ "Expected a full experiment model, but got " ++ show s
 parseNode :: Expr -> ModelState Node
 parseNode (BlockExpr name label exprs) = do
   ((_, node), edges) <- case name of
-    "population" -> parseNodeWithConnections (parsePopulationBody name) exprs
+    "population" -> do
+      populationName <- labelToName label PopulationCounter
+      parseNodeWithConnections (parsePopulationBody populationName) exprs
     "stimulus" -> do
       label <- labelToName label StimulusCounter
       vertex <- parseStimulusBody label exprs
       return (vertex, [])
-    "response" -> parseNodeWithConnections (parseResponseBody name) exprs
+    "response" -> parseNodeWithConnections parseResponseBody exprs
     _ -> throwError $ "Expected 'population', 'stimulus' or 'response' but found " ++ name
   return node
   where
@@ -103,10 +105,10 @@ parseNodeWithConnections parser body =
     isConnection _ = False
 
 parsePopulationBody :: String -> [Expr] -> ModelState Node
-parsePopulationBody name _ = return $ Population name 10
+parsePopulationBody name body = return $ Population name 10
 
-parseResponseBody :: String -> [Expr] -> ModelState Node
-parseResponseBody name _ = return Response
+parseResponseBody :: [Expr] -> ModelState Node
+parseResponseBody _ = return Response
 
 -- Stimulus
 
