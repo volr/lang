@@ -23,18 +23,18 @@ main = hspec spec
 
 parseFailure :: Expr -> (Expr -> ModelState a) -> IO ()
 parseFailure expr parser = do
-  let r = evalState (runErrorT (parser expr)) $ ExperimentState [] 0 Map.empty
+  let r = evalState (runErrorT (parser expr)) emptyState
   isLeft r `shouldBe` True
 
 parseSuccess :: (Eq a, Show a) => Expr -> (Expr -> ModelState a) -> a -> IO ()
 parseSuccess expr parser expected = do
-  let r = evalState (runErrorT (parser expr)) $ ExperimentState [] 0 Map.empty
+  let r = evalState (runErrorT (parser expr)) emptyState
   r `shouldBe` (Right expected)
 
 spec :: Spec
 spec = do
   describe "The model parser" $ do
-    let initialState = ExperimentState [] 0 Map.empty
+    let initialState = emptyState
     let fileField = FieldExpr "file" (StringExpr "x")
 
     it "can parse a block to a stimulus" $ do

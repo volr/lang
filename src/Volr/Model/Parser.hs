@@ -23,16 +23,18 @@ data ExperimentState = ExperimentState
   { edges :: [Edge]
   , index :: Int
   , nodes :: Map.Map String Vertex
+  , populationCounter :: Int
+  , stimulusCounter :: Int
   }
+
+emptyState = ExperimentState [] 0 Map.empty 0 0
 
 type Edge = Graph.LEdge Connection
 type Vertex = (Int, Node)
 
 parse :: Expr -> Either String Experiment
 parse (ExperimentExpr initialExprs) =
-  let
-    initialState = ExperimentState [] 0 Map.empty
-  in evalState (runErrorT parseModel) initialState
+  evalState (runErrorT parseModel) emptyState
   where
     parseModel :: ModelState Experiment
     parseModel = do
@@ -58,11 +60,16 @@ parseNode :: Expr -> ModelState Node
 parseNode (BlockExpr name label exprs) = do
   case name of
     "population" -> parsePopulationBody exprs
-    "stimulus" -> parseStimulusBody name exprs
+    "stimulus" -> do
+      label <- labelToName label StimulusCounter
+      parseStimulusBody label exprs
     "response" -> parseResponseBody exprs
     _ -> throwError $ "Expected 'population', 'stimulus' or 'response' but found " ++ name
-
--- Backend
+  where
+    labelToName :: Maybe String -> Counter -> ModelState String
+    labelToName (Just name) _ = pure name
+    labelToName Nothing counter =
+      (++) <$> pure (show counter) <*> fmap show (getAndIncrement counter)
 
 parseBackend :: Expr -> ModelState Backend
 parseBackend (BlockExpr "backend" (Just target) [FieldExpr "runtime" (RealExpr runtime)]) =
@@ -115,6 +122,12 @@ parseConnection s _ = throwError $ "Expected connection, but got " ++ show s
 
 -- Internal
 
+data Counter = Index | PopulationCounter | StimulusCounter
+instance Show Counter where
+  show Index = "index"
+  show PopulationCounter = "population"
+  show StimulusCounter = "stimulus"
+
 parseNumberList :: Expr -> ModelState [Float]
 parseNumberList (ListExpr list) = return $ listToFloats list
   where
@@ -122,12 +135,23 @@ parseNumberList (ListExpr list) = return $ listToFloats list
     listToFloats [] = []
 parseNumberList t = throwError $ "Expected list of numbers, but got " ++ (show t)
 
+getAndIncrement :: Counter -> ModelState Int
+getAndIncrement counter =
+  do  state <- get
+      let value = valueFromState state + 1
+      put $ case counter of
+        Index -> state { index = value }
+        PopulationCounter -> state { populationCounter = value }
+        StimulusCounter -> state { stimulusCounter = value }
+      return value
+  where
+    valueFromState state = case counter of
+      Index -> index state
+      PopulationCounter -> populationCounter state
+      StimulusCounter -> stimulusCounter state
+
 getAndIncrementIndex :: ModelState Int
-getAndIncrementIndex = do
-  state <- get
-  let idx = index state
-  put $ state {index = idx + 1}
-  return idx
+getAndIncrementIndex = getAndIncrement Index
 
 addEdge :: String -> Vertex -> Connection -> ModelState Edge
 addEdge fromName (toId, toNode) connection = do
