@@ -19,9 +19,16 @@ data Node
 -- | A response that records a number of 'Population's or 'Stimulus'
   = Response
   -- | A group of neurons that connects to other neurons or stimuli
-  | Population String Integer
+  | Population
+    { name :: String -- ^ The name of the population
+    , neurons :: Int -- ^ The number of neurons in the population
+    -- TODO: Allow neuron archetypes
+    }
   -- | A source of data that arrives from a 'DataSource'
-  | Stimulus String DataSource
+  | Stimulus
+    { name :: String -- ^ The name of the stimulus
+    , source :: DataSource -- ^ The source of the stimulus data
+    }
   deriving (Eq, Show)
 
 -- | A connection between two 'Node's with a given weight.

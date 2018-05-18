@@ -105,7 +105,8 @@ parseNodeWithConnections parser body =
     isConnection _ = False
 
 parsePopulationBody :: String -> [Expr] -> ModelState Node
-parsePopulationBody name body = return $ Population name 10
+parsePopulationBody name [FieldExpr "neurons" (IntExpr n)] = return $ Population name (fromInteger n)
+parsePopulationBody name s = throwError $ "Expected exactly one field: neurons, but got " ++ (show s)
 
 parseResponseBody :: [Expr] -> ModelState Node
 parseResponseBody _ = return Response

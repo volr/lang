@@ -26,6 +26,15 @@ parseFailure expr parser = do
   let r = evalState (runErrorT (parser expr)) emptyState
   isLeft r `shouldBe` True
 
+parseFailureEnv :: (Eq a, Show a)
+                => Expr
+                -> ExperimentState
+                -> (Expr -> ModelState a)
+                -> IO ()
+parseFailureEnv expr env parser = do
+  let r = evalState (runErrorT (parser expr)) env
+  isLeft r `shouldBe` True
+
 parseSuccess :: (Eq a, Show a) => Expr -> (Expr -> ModelState a) -> a -> IO ()
 parseSuccess expr parser expected = do
   let r = evalState (runErrorT (parser expr)) emptyState
@@ -58,19 +67,20 @@ spec = do
     it "can parse a block to a stimulus" $ do
       parseSuccess (BlockExpr "stimulus" Nothing [fileField]) parseNode (Stimulus "stimulus1" (File "x"))
 
-    -- it "can give stimuli names" $ do
-    --   let env = stateWith
-    --   parseSuccessEnv
-
     it "can fail to parse a block to a stimulus without input" $ do
       parseFailure (BlockExpr "stimulus" Nothing []) parseNode
+
+    it "can fail to parse a population without specification for neurons" $ do
+      let env = stateWith [("a", (0, Stimulus "a" (File "x")))] []
+      parseFailureEnv (BlockExpr "population" Nothing [BlockExpr "from" (Just "a") []]) env parseNode
 
     it "can parse a block to a population" $ do
       let connection = Connection 1
       let env = stateWith [("a", (0, Stimulus "a" (File "x")))] []
       let postEnv = env { edges = [(0, 1, connection)], index = 1}
-      let expr = BlockExpr "population" (Just "p") [BlockExpr "from" (Just "a") []]
-      parseSuccessEnv expr env parseNode (Population "p" 10) postEnv
+      let inner = [BlockExpr "from" (Just "a") [], FieldExpr "neurons" (IntExpr 7)]
+      let expr = BlockExpr "population" (Just "p") inner
+      parseSuccessEnv expr env parseNode (Population "p" 7) postEnv
 
     it "can parse a block to a response" $ do
       let connection = Connection 1
