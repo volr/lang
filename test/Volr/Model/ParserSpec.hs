@@ -44,10 +44,10 @@ parseSuccessEnv expr env parser expected expectedEnv =
           state `shouldBe` expectedEnv
           return ()
 
-stateWithVertex :: String -> Node -> ExperimentState
-stateWithVertex name node =
+stateWith :: String -> Node -> [Edge] -> ExperimentState
+stateWith name node edges =
   let env = emptyState
-  in  env { nodes = Map.fromList [(name, (1, node))] }
+  in  env { nodes = Map.fromList [(name, (0, node))], edges = edges }
 
 spec :: Spec
 spec = do
@@ -62,9 +62,11 @@ spec = do
       parseFailure (BlockExpr "stimulus" Nothing []) parseNode
 
     it "can parse a block to a response" $ do
-      let env = stateWithVertex "a" (Stimulus "a" (File "x"))
+      let connection = Connection 1
+      let env = stateWith "a" (Stimulus "a" (File "x")) []
+      let postEnv = env { edges = [(0, 1, connection)], index = 1}
       let expr = BlockExpr "response" Nothing [BlockExpr "from" (Just "a") []]
-      parseSuccessEnv expr env parseNode Response env
+      parseSuccessEnv expr env parseNode Response postEnv
 
     it "can fail to parse a block to a response without connections " $ do
       parseFailure (BlockExpr "response" Nothing []) parseNode
