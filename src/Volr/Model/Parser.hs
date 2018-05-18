@@ -8,6 +8,7 @@ import Control.Monad.State.Lazy
 
 import Data.Functor.Identity
 import qualified Data.Graph.Inductive.Graph as Graph
+import Data.List (partition)
 import qualified Data.Map.Strict as Map
 
 import GHC.Float (double2Float)
@@ -25,7 +26,7 @@ data ExperimentState = ExperimentState
   , nodes :: Map.Map String Vertex
   , populationCounter :: Int
   , stimulusCounter :: Int
-  }
+  } deriving (Eq, Show)
 
 emptyState = ExperimentState [] 0 Map.empty 0 0
 
@@ -53,24 +54,27 @@ parse (ExperimentExpr initialExprs) =
       pure $ Experiment model backends
 parse s = Left $ "Expected a full experiment model, but got " ++ show s
 
--- Block parsing
+-- Generic parsing
 
 -- | Parses an incomplete node block with the given name and index
 parseNode :: Expr -> ModelState Node
 parseNode (BlockExpr name label exprs) = do
-  case name of
-    "population" -> parsePopulationBody exprs
+  ((_, node), edges) <- case name of
+    "population" -> parseNodeWithConnections (parsePopulationBody name) exprs
     "stimulus" -> do
       label <- labelToName label StimulusCounter
-      parseStimulusBody label exprs
-    "response" -> parseResponseBody exprs
+      vertex <- parseStimulusBody label exprs
+      return (vertex, [])
+    "response" -> parseNodeWithConnections (parseResponseBody name) exprs
     _ -> throwError $ "Expected 'population', 'stimulus' or 'response' but found " ++ name
+  return node
   where
     labelToName :: Maybe String -> Counter -> ModelState String
     labelToName (Just name) _ = pure name
     labelToName Nothing counter =
       (++) <$> pure (show counter) <*> fmap show (getAndIncrement counter)
 
+-- | Parses a backend from a 'BlockExpr'
 parseBackend :: Expr -> ModelState Backend
 parseBackend (BlockExpr "backend" (Just target) [FieldExpr "runtime" (RealExpr runtime)]) =
   let
@@ -80,24 +84,37 @@ parseBackend (BlockExpr "backend" (Just target) [FieldExpr "runtime" (RealExpr r
   in return $ Myelin executionTarget runtime
 parseBackend s = throwError $ "Expected backend, but got " ++ (show s)
 
--- Population
+-- | Parses a 'Response' or a 'Population' from a 'BlockExpr'. Both are required
+--   to have one or more 'Connection's
+parseNodeWithConnections :: ([Expr] -> ModelState Node) -- ^ A parser for the node body
+                         -> [Expr] -- ^ The expressions within the node
+                         -> ModelState (Vertex, [Edge]) -- ^ The parsed node and its edges
+parseNodeWithConnections parser body =
+  let (connectionsExprs, fieldExprs) = partition isConnection body
+  in if length connectionsExprs == 0 then throwError "No connections found" else do
+         node <- parser fieldExprs
+         nodeId <- getAndIncrementIndex
+         let vertex = (nodeId, node)
+         edges <- mapM (parseConnection vertex) connectionsExprs
+         return (vertex, edges)
+  where
+    isConnection :: Expr -> Bool
+    isConnection (BlockExpr "from" (Just _) _) = True
+    isConnection _ = False
 
-parsePopulationBody :: [Expr] -> ModelState Node
---parseBlock (BlockExpr "stimulus" label entries) =
-parsePopulationBody expr = throwError ("Unknown block " ++ (show expr))
+parsePopulationBody :: String -> [Expr] -> ModelState Node
+parsePopulationBody name _ = return $ Population name 10
 
--- Response
-
-parseResponseBody :: [Expr] -> ModelState Node
-parseResponseBody body = do
-  return Response
+parseResponseBody :: String -> [Expr] -> ModelState Node
+parseResponseBody name _ = return Response
 
 -- Stimulus
 
-parseStimulusBody :: String -> [Expr] -> ModelState Node
+parseStimulusBody :: String -> [Expr] -> ModelState Vertex
 parseStimulusBody name [source] = do
   source <- parseDataSource source
-  return $ Stimulus name source
+  nodeId <- getAndIncrementIndex
+  return $ (nodeId, Stimulus name source)
 parseStimulusBody name [] = throwError $ "Stimulus " ++ name ++ " requires a data source, but none was given"
 parseStimulusBody name s = throwError $ "Too many elements for stimulus " ++ name ++ ": " ++ show s
 
@@ -106,19 +123,17 @@ parseDataSource (FieldExpr "file" (StringExpr fileName)) = return (File fileName
 parseDataSource (FieldExpr "array" l@(ListExpr _)) = fmap Array (parseNumberList l)
 parseDataSource _ = throwError "Error"
 
--- Connection
-
-parseConnection :: Expr -> Vertex -> ModelState Connection
-parseConnection (BlockExpr "from" (Just name) exprs) to = do
+-- | Parses a connection
+parseConnection :: Vertex -> Expr -> ModelState Edge
+parseConnection to (BlockExpr "from" (Just name) exprs) = do
   connection <- case exprs of
     [RealExpr weight] -> return $ Connection (double2Float weight)
     [] -> return $ Connection 1
     s -> throwError $ "Connection to " ++ name ++ " only supports a weight attribute, but received several: " ++ show s
   addEdge name to connection
-  return connection
-parseConnection (BlockExpr "from" Nothing _) _ =
+parseConnection _ (BlockExpr "from" Nothing _) =
   throwError "Connection requires the name of the source population or simuli. None was given"
-parseConnection s _ = throwError $ "Expected connection, but got " ++ show s
+parseConnection _ s = throwError $ "Expected connection, but got " ++ show s
 
 -- Internal
 

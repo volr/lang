@@ -13,7 +13,7 @@ import qualified Text.Megaparsec as P
 import Test.Hspec
 import qualified Test.QuickCheck
 
-import Myelin.SNN
+import qualified Myelin.SNN as Myelin
 import Volr.Model.Model
 import Volr.Model.Parser
 import Volr.Syntax.AST
@@ -31,6 +31,24 @@ parseSuccess expr parser expected = do
   let r = evalState (runErrorT (parser expr)) emptyState
   r `shouldBe` (Right expected)
 
+parseSuccessEnv :: (Eq a, Show a)
+                => Expr
+                -> ExperimentState
+                -> (Expr -> ModelState a)
+                -> a
+                -> ExperimentState
+                -> IO ()
+parseSuccessEnv expr env parser expected expectedEnv =
+  let (result, state) = runState (runErrorT (parser expr)) env
+  in  do  result `shouldBe` Right expected
+          state `shouldBe` expectedEnv
+          return ()
+
+stateWithVertex :: String -> Node -> ExperimentState
+stateWithVertex name node =
+  let env = emptyState
+  in  env { nodes = Map.fromList [(name, (1, node))] }
+
 spec :: Spec
 spec = do
   describe "The model parser" $ do
@@ -44,7 +62,9 @@ spec = do
       parseFailure (BlockExpr "stimulus" Nothing []) parseNode
 
     it "can parse a block to a response" $ do
-      parseSuccess (BlockExpr "response" Nothing [BlockExpr "from" (Just "a") []]) parseNode (Response)
+      let env = stateWithVertex "a" (Stimulus "a" (File "x"))
+      let expr = BlockExpr "response" Nothing [BlockExpr "from" (Just "a") []]
+      parseSuccessEnv expr env parseNode Response env
 
     it "can fail to parse a block to a response without connections " $ do
       parseFailure (BlockExpr "response" Nothing []) parseNode
