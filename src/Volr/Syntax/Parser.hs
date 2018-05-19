@@ -33,7 +33,7 @@ parseBlock = Lexer.nonIndented newlineSpace (Lexer.indentBlock newlineSpace inne
       name <- Megaparsec.try (inlineSpace *> Megaparsec.optional parseString)
       eof <- Megaparsec.optional (Megaparsec.eof <|> (Megaparsec.try (Char.newline *> Char.newline *> pure())))
       let indentType = if isJust eof then Lexer.IndentMany else Lexer.IndentSome
-      let fieldParser = (parseList parseScalar) <|> parseScalar
+      let fieldParser = parseBlock <|> (parseList parseScalar) <|> parseScalar
       let nestedParser = Megaparsec.try ((parseField fieldParser) <|> (parseList parseScalar))
       return $ indentType Nothing (return . (BlockExpr category name)) nestedParser
 

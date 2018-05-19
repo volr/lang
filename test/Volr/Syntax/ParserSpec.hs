@@ -71,6 +71,11 @@ spec = do
     it "can fail to parse a block with differing indentation" $ do
       parseFail "some a\n  thing: x\n    else: y" parseBlock
 
+-- Connections
+
+    it "can parse a connection" $ do
+      parseSuccess "from a\n weight: 2.2" parseBlock (BlockExpr "from" (Just "a") [FieldExpr "weight" (RealExpr 2.2)])
+
 -- Aggregations
 
     it "can parse a field" $ do

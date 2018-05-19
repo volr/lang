@@ -2,7 +2,8 @@ stimulus s
   array: [1, 2, 3]
 
 population f
-  weight: 1
+  from s
+    weight: 1
   neurons: 10
 
 response
