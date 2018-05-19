@@ -31,5 +31,10 @@ parseSuccess fileName expected = do
 spec :: Spec
 spec = do
   describe "Volr model parser" $ do
-    it "can build a 1layer example" $ do
-      parseSuccess "1layer" $ Experiment Graph.empty [Myelin (Nest 0 0) 100]
+
+    -- it "can build a bare-bone example" $ do
+    --   let expected = Experiment Graph.empty [Myelin (Nest 0 0) 100]
+    --   parse "backend myelin" `shouldBe` Right expected
+    --
+    -- it "can build a 1layer example" $ do
+    --   parseSuccess "1layer" $ Experiment Graph.empty [Myelin (Nest 0 0) 100]

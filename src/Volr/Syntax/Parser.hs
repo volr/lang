@@ -50,8 +50,9 @@ parseBlock =
         then return $ Lexer.IndentNone $ BlockExpr category name []
         else do
           -- Nested content can be either block, a number of fields or a scalar
+          let fieldParser = parseField (parseList parseScalar <|> parseScalar)
           let nestedParser = Megaparsec.try (Megaparsec.dbg "nested block" parseBlock)
-                              <|> Megaparsec.try (Megaparsec.dbg "nested field" (parseField parseScalar))
+                              <|> Megaparsec.try (Megaparsec.dbg "nested field" fieldParser)
                               <|> Megaparsec.dbg "nested scalar" parseScalar
           return $ Lexer.IndentSome Nothing (return . BlockExpr category name) nestedParser
 

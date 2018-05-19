@@ -33,6 +33,7 @@ emptyState = ExperimentState [] 0 Map.empty 0 0
 type Edge = Graph.LEdge Connection
 type Vertex = (Int, Node)
 
+-- | Parses an experiment 'Expr' into a full 'Experiment'
 parse :: Expr -> Either String Experiment
 parse (ExperimentExpr initialExprs) =
   evalState (runErrorT parseModel) emptyState
@@ -52,7 +53,7 @@ parse (ExperimentExpr initialExprs) =
       let model = Graph.mkGraph graphNodes graphEdges
 
       pure $ Experiment model backends
-parse s = Left $ "Expected a full experiment model, but got " ++ show s
+parse s = Left $ "Expected a full experiment, but got " ++ show s
 
 -- Generic parsing
 
