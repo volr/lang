@@ -1,8 +1,11 @@
+{-# LANGUAGE FlexibleInstances #-}
+
 module Volr.Syntax.Parser where
 
 import Control.Applicative hiding (many, some)
 import Control.Monad.State.Lazy
 
+import Data.Functor
 import qualified Data.Map as Map
 import Data.Maybe (isJust)
 import qualified Data.Scientific as Scientific
@@ -17,25 +20,40 @@ import Volr.Syntax.AST
 type SyntaxError = Megaparsec.ParseError (Megaparsec.Token String) String
 type Parser = Megaparsec.Parsec String String
 
+instance Megaparsec.ShowErrorComponent String where
+  showErrorComponent = show
+
 parse :: String -> Either SyntaxError Expr
 parse code = Megaparsec.runParser parseExperiment "" code
 
 parseExperiment :: Parser Expr
-parseExperiment = ExperimentExpr <$> Megaparsec.some (newlineSpace *> parseBlock)
+parseExperiment =
+  let rootBlock = Lexer.nonIndented newlineSpace parseBlock
+  in  ExperimentExpr <$> Megaparsec.some (newlineSpace *> parseBlock)
 
 -- Block
 -- Thanks to: https://markkarpov.com/megaparsec/indentation-sensitive-parsing.html
 parseBlock :: Parser Expr
-parseBlock = Lexer.nonIndented newlineSpace (Lexer.indentBlock newlineSpace innerOpt)
+parseBlock =
+  Lexer.indentBlock newlineSpace innerParser
   where
-    innerOpt = do
-      category <- parseString
-      name <- Megaparsec.try (inlineSpace *> Megaparsec.optional parseString)
-      eof <- Megaparsec.optional (Megaparsec.eof <|> (Megaparsec.try (Char.newline *> Char.newline *> pure())))
-      let indentType = if isJust eof then Lexer.IndentMany else Lexer.IndentSome
-      let fieldParser = parseBlock <|> (parseList parseScalar) <|> parseScalar
-      let nestedParser = Megaparsec.try ((parseField fieldParser) <|> (parseList parseScalar))
-      return $ indentType Nothing (return . (BlockExpr category name)) nestedParser
+    innerParser = do
+      -- Parse the category
+      category <- Megaparsec.dbg "category" parseString
+      -- Parse an optional name
+      name <- Megaparsec.dbg "name" $ inlineSpace *> Megaparsec.try (Megaparsec.optional parseString)
+      -- Parse a potential early end (end-of-file or double linebreak)
+      eof <- Megaparsec.dbg "eof" $ Megaparsec.optional $ Megaparsec.eof
+               <|> Megaparsec.try (Char.newline *> Char.newline $> ())
+
+      if isJust eof
+        then return $ Lexer.IndentNone $ BlockExpr category name []
+        else do
+          -- Nested content can be either block, a number of fields or a scalar
+          let nestedParser = Megaparsec.try (Megaparsec.dbg "nested block" parseBlock)
+                              <|> Megaparsec.try (Megaparsec.dbg "nested field" (parseField parseScalar))
+                              <|> Megaparsec.dbg "nested scalar" parseScalar
+          return $ Lexer.IndentSome Nothing (return . BlockExpr category name) nestedParser
 
 -- Aggregations
 
@@ -107,9 +125,6 @@ getIndent = do
 inlineSpace :: Parser ()
 inlineSpace = Lexer.space (Megaparsec.takeWhile1P Nothing f *> pure ()) lineComment empty
   where f x = x == ' ' || x == '\t'
-
-inlineSpaces :: Parser ()
-inlineSpaces = Megaparsec.many inlineSpace *> pure ()
 
 lineComment :: Parser ()
 lineComment = Lexer.skipLineComment "#"

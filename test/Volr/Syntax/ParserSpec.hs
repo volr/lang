@@ -42,6 +42,11 @@ spec = do
     it "can parse a double-block experiment" $ do
       parseSuccess "some\n\nthing" parseExperiment $ ExperimentExpr [BlockExpr "some" Nothing [], BlockExpr "thing" Nothing []]
 
+    it "can parse a double-block experiment with fields" $ do
+      let block1 = BlockExpr "a" Nothing [FieldExpr "x" (StringExpr "a")]
+      let block2 = BlockExpr "b" Nothing [FieldExpr "y" (StringExpr "b")]
+      parseSuccess "a\n x:a\nb\n y:b" parseExperiment $ ExperimentExpr [block1, block2]
+
 -- Blocks
 
     it "can parse a block without a label or fields" $ do
@@ -70,6 +75,20 @@ spec = do
 
     it "can fail to parse a block with differing indentation" $ do
       parseFail "some a\n  thing: x\n    else: y" parseBlock
+
+    it "can parse a block with a string expression" $ do
+      let expected = BlockExpr "a" Nothing [StringExpr "b"]
+      parseSuccess "a\n  b\n" parseBlock expected
+
+    it "can parse a block with a block containing a single field" $ do
+      let expected = BlockExpr "a" Nothing [BlockExpr "b" Nothing [FieldExpr "x" (StringExpr "y")]]
+      parseSuccess "a\n  b\n    x: y" parseBlock expected
+
+    it "can split block contents based on indentation" $ do
+      let innerBlock = BlockExpr "from" (Just "b") [FieldExpr "weight" (IntExpr (-1))]
+      let expected = BlockExpr "some" Nothing [ innerBlock, FieldExpr "test" (IntExpr 2) ]
+      let code = "some\n  from b\n    weight: -1\n  test: 2"
+      parseSuccess code parseBlock expected
 
 -- Connections
 
