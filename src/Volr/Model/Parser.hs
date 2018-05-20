@@ -3,7 +3,7 @@
 module Volr.Model.Parser where
 
 import Control.Applicative
-import Control.Monad.Error
+import Control.Monad.Except
 import Control.Monad.State.Lazy
 
 import Data.Functor.Identity
@@ -18,7 +18,8 @@ import qualified Myelin.SNN as Myelin
 import Volr.Model.Model
 import Volr.Syntax.AST
 
-type ModelState = ErrorT String (State ExperimentState)
+type Error = String
+type ModelState = ExceptT Error (State ExperimentState)
 
 data ExperimentState = ExperimentState
   { edges :: [Edge]
@@ -35,25 +36,28 @@ type Vertex = (Int, Node)
 
 -- | Parses an experiment 'Expr' into a full 'Experiment'
 parse :: Expr -> Either String Experiment
-parse (ExperimentExpr initialExprs) =
-  evalState (runErrorT parseModel) emptyState
-  where
-    parseModel :: ModelState Experiment
-    parseModel = do
-      -- Parse all nodes
-      (backendExprs, _) <- parseUntilError initialExprs [] parseNode
+parse expr = evalState (runExceptT $ parseExperiment expr) emptyState
 
-      -- Parse all backends
-      (_, backends) <- parseUntilError backendExprs [] parseBackend
+-- | Parses an experiment from a number of blocks
+parseExperiment :: Expr -> ModelState Experiment
+parseExperiment (ExperimentExpr initialExprs) = do
+  -- Parse all nodes
+  (backendExprs, _, _) <- parseUntilError initialExprs [] parseNode
 
-      -- Build the graph
-      state <- get
-      let graphEdges = edges state
-      let graphNodes = Map.elems $ nodes state
-      let model = Graph.mkGraph graphNodes graphEdges
+  -- Parse all backends
+  (_, backends, e) <- parseUntilError backendExprs [] parseBackend
+  case e of
+    Nothing -> return ()
+    Just x -> throwError x
 
-      pure $ Experiment model backends
-parse s = Left $ "Expected a full experiment, but got " ++ show s
+  -- Build the graph
+  state <- get
+  let graphEdges = edges state
+  let graphNodes = Map.elems $ nodes state
+  let model = Graph.mkGraph graphNodes graphEdges
+
+  pure $ Experiment model backends
+parseExperiment s = throwError $ "Expected a full experiment, but got " ++ show s
 
 -- Generic parsing
 
@@ -79,13 +83,19 @@ parseNode (BlockExpr name label exprs) = do
 
 -- | Parses a backend from a 'BlockExpr'
 parseBackend :: Expr -> ModelState Backend
-parseBackend (BlockExpr "backend" (Just target) [FieldExpr "runtime" (RealExpr runtime)]) =
-  let
-    executionTarget = case target of
-      "nest" -> Myelin.Nest 0 100
-      "brainscales" -> Myelin.BrainScaleS 33 297
-  in return $ Myelin executionTarget runtime
-parseBackend s = throwError $ "Expected backend, but got " ++ (show s)
+parseBackend (BlockExpr "backend" (Just target) [FieldExpr "runtime" runtimeExpr]) =
+  do  executionTarget <- case target of
+        "nest" -> return $ Myelin.Nest 0 100
+        "brainscales" -> return $ Myelin.BrainScaleS 33 297
+        e -> throwError $ "Unknown backend " ++ (show e)
+      runtime <- case runtimeExpr of
+        RealExpr r -> return r
+        IntExpr r -> return $ fromInteger r
+        e -> throwError $ "Expected runtime, but got " ++ (show e)
+        -- QuantityExpr time unit ->
+        -- e -> throwError $ "Expected a runtime given with a quantity and unit, but got " ++ e
+      return $ Myelin executionTarget runtime
+parseBackend s = throwError $ "Expected backend, but got " ++ show s
 
 -- | Parses a 'Response' or a 'Population' from a 'BlockExpr'. Both are required
 --   to have one or more 'Connection's
@@ -212,8 +222,8 @@ getVertex name = do
 -- | Parses a list of expressions until an error occurs, but instead of relaying
 --   the error, the remaining expressions is returned along with the
 --   successfully parsed elements.
-parseUntilError :: [Expr] -> [a] -> (Expr -> ModelState a) -> ModelState ([Expr], [a])
+parseUntilError :: [Expr] -> [a] -> (Expr -> ModelState a) -> ModelState ([Expr], [a], Maybe Error)
 parseUntilError exprs@(next:remaining) parsed parser = do
     result <- parser next
-    return (remaining, (result:parsed))
-  `catchError` (\err -> return (exprs, parsed)) -- Discard error for now; TODO: Store for later debugging
+    return (remaining, (result:parsed), Nothing)
+  `catchError` (\err -> return (exprs, parsed, Just err)) -- Discard error for now; TODO: Store for later debugging
