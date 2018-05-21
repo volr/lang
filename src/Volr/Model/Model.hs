@@ -8,7 +8,7 @@ import Data.Typeable
 import Myelin.SNN (ExecutionTarget)
 
 -- | A neural network experiment
-data Experiment = Experiment Model [Backend] deriving (Eq, Show)
+data Experiment = Experiment Model [Target] deriving (Eq, Show)
 
 -- | A model of the neural network itself, represented as a 'Graph' that
 --   can be cyclic.
@@ -38,8 +38,8 @@ data Connection = Connection
   { weight :: Float
   } deriving (Eq, Ord, Show)
 
--- | The available backends on which the models can be evaluated.
-data Backend
+-- | The available target on which the models can be evaluated.
+data Target
   = Myelin ExecutionTarget Double
   -- | Futhark String
   deriving (Eq, Show)

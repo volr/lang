@@ -59,23 +59,40 @@ stateWith vertices edges =
   in  env { nodes = Map.fromList vertices, edges = edges }
 
 spec :: Spec
-spec = do
+spec =
   describe "The model parser" $ do
     let initialState = emptyState
     let fileField = FieldExpr "file" (StringExpr "x")
 
     context "when parsing experiments" $ do
 
-      it "can parse an empty experiment" $ do
+      it "can parse a target-only experiment" $ do
         let expected = Experiment Graph.empty [Myelin (Myelin.Nest 0 100) 100]
-        parseSuccess (ExperimentExpr [BlockExpr "backend" (Just "nest") [FieldExpr "runtime" (RealExpr 100)]]) parseExperiment expected
+        parseSuccess (ExperimentExpr [BlockExpr "target" (Just "nest") [FieldExpr "runtime" (RealExpr 100)]]) parseExperiment expected
+
+      it "can parse a rudimentary experiment" $ do
+        let nodes = [(1, Stimulus "a" (File "x")), (2, Response)]
+        let edges = [(1, 2, Connection 1)]
+        let graph = Graph.mkGraph nodes edges
+        let expected = Experiment graph [Myelin (Myelin.Nest 0 100) 100]
+        let stimulus = BlockExpr "stimulus" (Just "a") [FieldExpr "file" (StringExpr "x")]
+        let response = BlockExpr "response" Nothing [BlockExpr "from" (Just "a") []]
+        let target = BlockExpr "target" (Just "nest") [FieldExpr "runtime" (IntExpr 100)]
+        let expr = ExperimentExpr [stimulus, response, target]
+        parseSuccess expr parseExperiment expected
 
     context "when parsing blocks" $ do
 
-      it "can parse a block to a stimulus" $ do
+      it "can parse a block to a stimulus" $
         parseSuccess (BlockExpr "stimulus" Nothing [fileField]) parseNode (Stimulus "stimulus1" (File "x"))
 
-      it "can fail to parse a block to a stimulus without input" $ do
+      it "can store a stimulus block as a node" $ do
+        let node = Stimulus "a" (File "x")
+        let expectedEnv = (stateWith [("a", (1, node))] []) { index = 1 }
+        let expr = BlockExpr "stimulus" (Just "a") [FieldExpr "file" (StringExpr "x")]
+        parseSuccessEnv expr emptyState parseNode node expectedEnv
+
+      it "can fail to parse a block to a stimulus without input" $
         parseFailure (BlockExpr "stimulus" Nothing []) parseNode
 
       it "can fail to parse a population without specification for neurons" $ do
@@ -85,7 +102,7 @@ spec = do
       it "can parse a block to a population" $ do
         let connection = Connection 1
         let env = stateWith [("a", (0, Stimulus "a" (File "x")))] []
-        let postEnv = env { edges = [(0, 1, connection)], index = 1}
+        let postEnv = env { edges = [(0, 1, connection)], index = 1, nodes = Map.insert "p" (1, Population "p" 7) (nodes env)}
         let inner = [BlockExpr "from" (Just "a") [], FieldExpr "neurons" (IntExpr 7)]
         let expr = BlockExpr "population" (Just "p") inner
         parseSuccessEnv expr env parseNode (Population "p" 7) postEnv
@@ -93,17 +110,21 @@ spec = do
       it "can parse a block to a response" $ do
         let connection = Connection 1
         let env = stateWith [("a", (0, Stimulus "a" (File "x")))] []
-        let postEnv = env { edges = [(0, 1, connection)], index = 1}
+        let postEnv = env
+              { edges = [(0, 1, connection)]
+              , index = 1
+              , nodes = Map.insert "response1" (1, Response) (nodes env)
+              , responseCounter = 1}
         let expr = BlockExpr "response" Nothing [BlockExpr "from" (Just "a") []]
         parseSuccessEnv expr env parseNode Response postEnv
 
-      it "can fail to parse a block to a response without connections " $ do
+      it "can fail to parse a block to a response without connections " $
         parseFailure (BlockExpr "response" Nothing []) parseNode
 
-    context "when parsing backends" $ do
+    context "when parsing targets" $ do
 
-      it "can parse a data source from an array" $ do
-        parseSuccess (FieldExpr "array" (ListExpr [(RealExpr 1), (RealExpr 2), (RealExpr 3)])) parseDataSource $ Array [1, 2, 3]
+      it "can parse a data source from an array" $
+        parseSuccess (FieldExpr "array" (ListExpr [RealExpr 1, RealExpr 2, RealExpr 3])) parseDataSource $ Array [1, 2, 3]
 
-      it "can parse a data source from a file" $ do
+      it "can parse a data source from a file" $
         parseSuccess (FieldExpr "file" (StringExpr "x")) parseDataSource $ File "x"

@@ -92,8 +92,11 @@ spec = do
 
 -- Connections
 
-    it "can parse a connection" $ do
+    it "can parse a connection" $
       parseSuccess "from a\n weight: 2.2" parseBlock (BlockExpr "from" (Just "a") [FieldExpr "weight" (RealExpr 2.2)])
+
+    it "can parse a connection in a block" $
+      parseSuccess "response\n from a" parseBlock (BlockExpr "response" Nothing [BlockExpr "from" (Just "a") []])
 
 -- Aggregations
 

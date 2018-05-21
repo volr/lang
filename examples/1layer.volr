@@ -7,7 +7,7 @@ population f
   neurons: 10
 
 response
-  from: f
+  from f
 
 target nest
   runtime: 90

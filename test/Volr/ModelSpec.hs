@@ -13,7 +13,7 @@ import qualified Text.Megaparsec as P
 import Test.Hspec
 import qualified Test.QuickCheck
 
-import Myelin.SNN
+import qualified Myelin.SNN as SNN
 import Volr.Model.Model
 import Volr.Parser
 
@@ -33,8 +33,16 @@ spec = do
   describe "Volr model parser" $ do
 
     it "can build a bare-bone example" $ do
-      let expected = Experiment Graph.empty [Myelin (Nest 0 100) 100]
-      parse "backend nest\n runtime: 100" `shouldBe` Right expected
+      let expected = Experiment Graph.empty [Myelin (SNN.Nest 0 100) 100]
+      parse "target nest\n runtime: 100" `shouldBe` Right expected
 
-    -- it "can build a 1layer example" $ do
-    --   parseSuccess "1layer" $ Experiment Graph.empty [Myelin (Nest 0 0) 100]
+    it "can build a 1layer example" $ do
+      let nodes =
+            [ (1, Stimulus "s" (Array [1.0, 2.0, 3.0]))
+            , (2, Population "f" 10)
+            , (3, Response)]
+      let edges =
+            [ (1, 2, Connection 1)
+            , (2, 3, Connection 1)]
+      let graph = Graph.mkGraph nodes edges
+      parseSuccess "1layer" $ Experiment graph [Myelin (SNN.Nest 0 100) 90]
