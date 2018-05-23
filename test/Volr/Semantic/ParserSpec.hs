@@ -1,4 +1,4 @@
-module Volr.Model.ParserSpec (main, spec) where
+module Volr.Semantic.ParserSpec (main, spec) where
 
 import Control.Monad.Except
 import Control.Monad.State.Lazy
@@ -14,8 +14,8 @@ import Test.Hspec
 import qualified Test.QuickCheck
 
 import qualified Myelin.SNN as Myelin
-import Volr.Model.Model
-import Volr.Model.Parser
+import Volr.Model
+import Volr.Semantic.Parser
 import Volr.Syntax.AST
 
 main :: IO ()

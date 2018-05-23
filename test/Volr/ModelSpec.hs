@@ -14,7 +14,7 @@ import Test.Hspec
 import qualified Test.QuickCheck
 
 import qualified Myelin.SNN as SNN
-import Volr.Model.Model
+import Volr.Model
 import Volr.Parser
 
 main :: IO ()

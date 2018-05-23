@@ -1,14 +1,25 @@
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE RecordWildCards #-}
 
-module Volr.Model.Model where
+{-|
+Module      : Volr.Model
+Description : The semantic model that represents Volr experiments
+
+The model of Volr consists of an experiment with a neural network 'Model'
+and one or more 'Target's that can execute the model.
+-}
+module Volr.Model where
 
 import Data.Graph.Inductive hiding(Node)
 import Data.Typeable
 import Myelin.SNN (ExecutionTarget)
 
 -- | A neural network experiment
-data Experiment = Experiment Model [Target] deriving (Eq, Show)
+data Experiment
+  = Experiment
+    { model :: Model
+    , targets :: [Target]
+    } deriving (Eq, Show)
 
 -- | A model of the neural network itself, represented as a 'Graph' that
 --   can be cyclic.

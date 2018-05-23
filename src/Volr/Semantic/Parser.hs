@@ -1,6 +1,10 @@
 {-# LANGUAGE RecordWildCards #-}
 
-module Volr.Model.Parser where
+{-|
+Module      : Volr.Semantic.Parser
+Description : A semantic parser that interprets 'AST's into 'Experiment's
+-}
+module Volr.Semantic.Parser where
 
 import Control.Applicative
 import Control.Monad.Except
@@ -15,7 +19,7 @@ import GHC.Float (double2Float)
 
 import qualified Myelin.SNN as Myelin
 
-import Volr.Model.Model
+import Volr.Model
 import Volr.Syntax.AST
 
 type Error = String

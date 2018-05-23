@@ -5,9 +5,9 @@ import Data.Semigroup ((<>))
 
 import System.IO (hPutStrLn, stderr)
 
-import Volr.Model.Model
+import Volr.Model
 import Volr.Parser
-import Volr.Backend
+import Volr.Executor
 
 data Configuration = Configuration
   { input :: Input
@@ -56,7 +56,7 @@ readInput StdInput = getContents
 runBackend :: Experiment -> Configuration -> IO ()
 runBackend experiment configuration = do
   let (Configuration input output) = configuration
-  case run experiment of
+  case execute experiment of
     Left error -> hPutStrLn stderr error
     Right resultIO -> do
       result <- resultIO

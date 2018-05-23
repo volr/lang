@@ -1,6 +1,6 @@
 {-# LANGUAGE RecordWildCards #-}
 
-module Volr.Backend.Myelin (runMyelin) where
+module Volr.Target.Myelin (runMyelin) where
 
 import Control.Applicative
 import Control.Monad
@@ -11,7 +11,7 @@ import qualified Data.Text as T
 import qualified Data.Text.Lazy as TL
 import Data.Typeable
 
-import Volr.Model.Model
+import Volr.Model
 
 import qualified Myelin.SNN as Myelin
 import qualified Myelin.Spikey
