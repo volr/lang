@@ -1,13 +1,15 @@
 module Main where
 
-import Options.Applicative
+import qualified Data.ByteString as ByteString
+import qualified Data.ByteString.Lazy as ByteString.Lazy
 import Data.Semigroup ((<>))
+import Options.Applicative
 
 import System.IO (hPutStrLn, stderr)
 
 import Volr.Model
 import Volr.Parser
-import Volr.Executor
+import Volr.Generator
 
 data Configuration = Configuration
   { input :: Input
@@ -53,16 +55,16 @@ readInput :: Input -> IO String
 readInput (FileInput file) = readFile file
 readInput StdInput = getContents
 
-runBackend :: Experiment -> Configuration -> IO ()
-runBackend experiment configuration = do
+generateBackend :: Experiment -> Configuration -> IO ()
+generateBackend experiment configuration = do
   let (Configuration input output) = configuration
-  case execute experiment of
+  case generate experiment of
     Left error -> hPutStrLn stderr error
-    Right resultIO -> do
-      result <- resultIO
-      case output of
-        FileOutput file -> writeFile file result
-        StdOutput -> putStrLn result
+    Right lazyResult ->
+      let result = ByteString.Lazy.toStrict lazyResult
+      in  case output of
+            FileOutput file -> ByteString.writeFile file result
+            StdOutput -> putStrLn $ show result
 
 main :: IO ()
 main = do
@@ -71,7 +73,7 @@ main = do
     content <- readInput input
     case parse content of
       Left error -> hPutStrLn stderr $ show error
-      Right experiment -> runBackend experiment configuration
+      Right experiment -> generateBackend experiment configuration
   where
     configuration = info (parseConfig <**> helper)
       ( fullDesc

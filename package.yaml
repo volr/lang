@@ -25,7 +25,9 @@ dependencies:
 library:
   source-dirs: src
   dependencies:
+    - aeson
     - base
+    - bytestring
     - containers
     - dimensional
     - directory
@@ -46,6 +48,7 @@ executables:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
+    - bytestring
     - volr
     - optparse-applicative
 

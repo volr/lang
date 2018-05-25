@@ -39,11 +39,11 @@ parseBlock =
   where
     innerParser = do
       -- Parse the category
-      category <- Megaparsec.dbg "category" parseString
+      category <- parseString
       -- Parse an optional name
-      name <- Megaparsec.dbg "name" $ inlineSpace *> Megaparsec.try (Megaparsec.optional parseString)
+      name <- inlineSpace *> Megaparsec.try (Megaparsec.optional parseString)
       -- Parse a potential early end (end-of-file or double linebreak)
-      eof <- Megaparsec.dbg "eof" $ Megaparsec.optional $ Megaparsec.eof
+      eof <- Megaparsec.optional $ Megaparsec.eof
                <|> Megaparsec.try (Char.newline *> Char.newline $> ())
 
       if isJust eof
@@ -51,9 +51,9 @@ parseBlock =
         else do
           -- Nested content can be either block, a number of fields or a scalar
           let fieldParser = parseField (parseList parseScalar <|> parseScalar)
-          let nestedParser = Megaparsec.try (Megaparsec.dbg "nested block" parseBlock)
-                              <|> Megaparsec.try (Megaparsec.dbg "nested field" fieldParser)
-                              <|> Megaparsec.dbg "nested scalar" parseScalar
+          let nestedParser = Megaparsec.try parseBlock
+                              <|> Megaparsec.try fieldParser
+                              <|> parseScalar
           return $ Lexer.IndentSome Nothing (return . BlockExpr category name) nestedParser
 
 -- Aggregations
