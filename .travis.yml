@@ -13,7 +13,7 @@ before_install:
 - sed -i 's/git@github.com:/https:\/\/github.com\//' .gitmodules
 - git submodule update --init --recursive
 # Fix stack dependencies
-- sudo apt-get install libblas-dev
+- sudo apt-get install libblas-dev liblapack-dev
 # Download and unpack the stack executable
 - mkdir -p ~/.local/bin
 - export PATH=$HOME/.local/bin:$PATH
