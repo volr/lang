@@ -1,6 +1,6 @@
 [submodule "futhark-backend"]
 	path = futhark-backend
-	url = git@github.com:volr/futhark-backend.git
+	url = https://github.com/volr/futhark-backend.git
 [submodule "myelin"]
 	path = myelin
-	url = git@github.com:volr/myelin.git
+	url = https://github.com/volr/myelin.git
