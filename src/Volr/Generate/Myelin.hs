@@ -56,7 +56,7 @@ defineNodes nodes =
         Volr.Array xs -> Myelin.spikeSourceArray xs
         Volr.File inputFile -> Myelin.fileInput inputFile
     defineNode (Population name neurons) =
-      Myelin.population name (toInteger neurons) Myelin.if_cond_exp 
+      Myelin.population name (toInteger neurons) Myelin.if_cond_exp
     defineNode Response =
       Myelin.fileOutput "file"
 

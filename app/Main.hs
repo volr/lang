@@ -64,7 +64,7 @@ generateBackend experiment configuration = do
       let result = ByteString.Lazy.toStrict lazyResult
       in  case output of
             FileOutput file -> ByteString.writeFile file result
-            StdOutput -> putStrLn $ show result
+            StdOutput -> ByteString.putStrLn result
 
 main :: IO ()
 main = do
