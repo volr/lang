@@ -24,4 +24,4 @@ cache:
   - $HOME/.stack
 
 script:
-  - travis_wait 30 stack --no-terminal --skip-ghc-check test
+  - travis_wait 60 stack --no-terminal --skip-ghc-check test
