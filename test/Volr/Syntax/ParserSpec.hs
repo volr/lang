@@ -12,7 +12,6 @@ import qualified Text.Megaparsec as P
 import Test.Hspec
 import qualified Test.QuickCheck
 
-import Myelin.SNN
 import Volr.Syntax.AST
 import Volr.Syntax.Parser
 

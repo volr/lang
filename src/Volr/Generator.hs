@@ -10,5 +10,6 @@ import Volr.Model
 import Volr.Generate.Myelin
 
 generate :: Experiment -> Either String ByteString
+generate _ = Left "Error"
 -- run model@(Model _ (Ta!rget (Futhark _ _))) = runFuthark model
-generate = fmap encode . generateMyelin
+-- generate = fmap encode . generateMyelin

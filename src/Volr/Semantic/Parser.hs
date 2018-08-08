@@ -17,8 +17,6 @@ import qualified Data.Map.Strict as Map
 
 import GHC.Float (double2Float)
 
-import qualified Myelin.SNN as Myelin
-
 import Volr.Model
 import Volr.Syntax.AST
 
@@ -99,18 +97,17 @@ parseNode (BlockExpr name label exprs) = do
 
 -- | Parses a target from a 'BlockExpr'
 parseTarget :: Expr -> ModelState Target
-parseTarget (BlockExpr "target" (Just target) [FieldExpr "runtime" runtimeExpr]) =
-  do  executionTarget <- case target of
-        "nest" -> return $ Myelin.Nest 0 100
-        "brainscales" -> return $ Myelin.BrainScaleS 33 297
-        e -> throwError $ "Unknown target " ++ (show e)
-      runtime <- case runtimeExpr of
-        RealExpr r -> return r
-        IntExpr r -> return $ fromInteger r
-        e -> throwError $ "Expected runtime, but got " ++ (show e)
+parseTarget (BlockExpr "target" (Just target) _) =
+  do case target of
+      "futhark" -> return $ Futhark
+      e -> throwError $ "Unknown target " ++ (show e)
+      -- runtime <- case runtimeExpr of
+        -- RealExpr r -> return r
+        -- IntExpr r -> return $ fromInteger r
+        -- e -> throwError $ "Expected runtime, but got " ++ (show e)
         -- QuantityExpr time unit ->
         -- e -> throwError $ "Expected a runtime given with a quantity and unit, but got " ++ e
-      return $ Myelin executionTarget runtime
+      -- return $ Myelin executionTarget 100
 parseTarget s = throwError $ "Expected target, but got " ++ show s
 
 -- | Parses a 'Response' or a 'Population' from a 'BlockExpr'. Both are required

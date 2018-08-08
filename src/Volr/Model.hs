@@ -12,7 +12,6 @@ module Volr.Model where
 
 import Data.Graph.Inductive hiding(Node)
 import Data.Typeable
-import Myelin.SNN (ExecutionTarget)
 
 -- | A neural network experiment
 data Experiment
@@ -51,7 +50,8 @@ data Connection = Connection
 
 -- | The available target on which the models can be evaluated.
 data Target
-  = Myelin ExecutionTarget Double
+  = Futhark
+  -- Myelin ExecutionTarget Double
   -- | Futhark String
   deriving (Eq, Show)
 

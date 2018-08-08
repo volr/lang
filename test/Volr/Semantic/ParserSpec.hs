@@ -13,7 +13,6 @@ import qualified Text.Megaparsec as P
 import Test.Hspec
 import qualified Test.QuickCheck
 
-import qualified Myelin.SNN as Myelin
 import Volr.Model
 import Volr.Semantic.Parser
 import Volr.Syntax.AST
@@ -67,17 +66,17 @@ spec =
     context "when parsing experiments" $ do
 
       it "can parse a target-only experiment" $ do
-        let expected = Experiment Graph.empty [Myelin (Myelin.Nest 0 100) 100]
-        parseSuccess (ExperimentExpr [BlockExpr "target" (Just "nest") [FieldExpr "runtime" (RealExpr 100)]]) parseExperiment expected
+        let expected = Experiment Graph.empty [Futhark]
+        parseSuccess (ExperimentExpr [BlockExpr "target" (Just "futhark") [FieldExpr "runtime" (RealExpr 100)]]) parseExperiment expected
 
       it "can parse a rudimentary experiment" $ do
         let nodes = [(1, Stimulus "a" (File "x")), (2, Response)]
         let edges = [(1, 2, Connection 1)]
         let graph = Graph.mkGraph nodes edges
-        let expected = Experiment graph [Myelin (Myelin.Nest 0 100) 100]
+        let expected = Experiment graph [Futhark]
         let stimulus = BlockExpr "stimulus" (Just "a") [FieldExpr "file" (StringExpr "x")]
         let response = BlockExpr "response" Nothing [BlockExpr "from" (Just "a") []]
-        let target = BlockExpr "target" (Just "nest") [FieldExpr "runtime" (IntExpr 100)]
+        let target = BlockExpr "target" (Just "futhark") []
         let expr = ExperimentExpr [stimulus, response, target]
         parseSuccess expr parseExperiment expected
 

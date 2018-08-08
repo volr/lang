@@ -34,7 +34,6 @@ library:
     - fgl
     - megaparsec
     - mtl
-    - myelin
     - process
     - scientific
     - text
@@ -68,4 +67,3 @@ tests:
     - mtl
     - hspec
     - QuickCheck
-    - myelin
