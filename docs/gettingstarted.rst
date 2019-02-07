@@ -2,37 +2,30 @@
 
 Getting started with Volr
 =========================
-This guide assumes that you have set up the language compiler, Futhark as the
-execution target and installed the Jupyter notebook plugin.
+This guide assumes that you have set up the language compiler and NEST as the
+execution target.
 If that doesn't make sense to you, please go through :ref:`installation`.
 
-Running an experiment in a Jupyter notebook
---------------------------------------------
-To use Volr from within a notebook you need to prefix the code with "%%volr".
-Here is an example of a small experiment you can copy-paste into your notebook:
+Defining and running an experiment
+----------------------------------
+The experiments are defined through the Volr domain-specific language (DSL).
+Here is one example: `Seq (Net 4 2) (Net 2 1)`
 
-    stimulus s
-      input: [1, 2, 3]
+Compile this network through the commandline like so:
 
-    population p
-      from s
-      neurons: 20
+`echo 'Seq (Net 4 2) (Net 2 1) | volrc nest > nest_experiment.py`
 
-    response
-      from p
+The resulting output will give you an executable in Python. Note that this
+requires NEST to execute.
 
-    target Futhark
-
-Try to execute that as a cell in your Jupyter notebook.
+`echo '[1,1,1,1]' '[0]' | python3 nest_experiment.py`
 
 Analysing experiment output
 ---------------------------
-If everything went well the above code gives you a number of plots.
-The results are stored and available for analysis in Python in the variable
-**result**.
-Go ahead and try to print that:
-
-    > print(result)
+When running the experiment you're given a report of the outcomes.
+The report contains the model accuracy, errors through training.
+It also contains the parameters that can be used to inject into other model
+backends.
 
 Next steps
 ----------

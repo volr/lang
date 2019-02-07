@@ -20,10 +20,7 @@ Volr follows the
 `UNIX philosophy <https://en.wikipedia.org/wiki/Unix_philosophy>`_ of doing one
 thing well: neural network experiment modelling.
 It exists as a part of an ecosystem and a number of tools are required to make
-proper use of Volr. The best interface to date is probably
-`Jupyter notebook <https://jupyter.org/>`_ plugin, which lets you run
-your experiments in a `Python <https://www.python.org/>` environment.
-
+proper use of Volr. 
 Volr is still highly experimental.
 
 Contact
